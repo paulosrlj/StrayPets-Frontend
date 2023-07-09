@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { NavigationContainer } from '@react-navigation/native'
 import { Colors } from '../utils/Colors'
 import TabNavigator from './TabNavigator'
+import Map from '../screens/Map'
 
 const Stack = createNativeStackNavigator()
 
@@ -27,6 +28,15 @@ export default function Routes (): JSX.Element {
             {
               headerShown: false,
               contentStyle: { backgroundColor: 'red' }
+            }
+          }
+        />
+        <Stack.Screen
+          name="Map"
+          component={Map}
+          options={
+            {
+              // contentStyle: { backgroundColor: 'red' }
             }
           }
         />

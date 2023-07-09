@@ -3,12 +3,19 @@ import React from 'react'
 
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons'
 import { Colors } from '../utils/Colors'
+import { useNavigation } from '@react-navigation/native'
 
 export default function Home (): JSX.Element {
+  const navigator = useNavigation<any>()
+
+  function handleNavigation (screen: string): void {
+    navigator.navigate(screen)
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.innerContainer}>
-        <Pressable style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}>
+        <Pressable style={({ pressed }) => [styles.box, pressed && styles.pressedBox]} onPress={() => { handleNavigation('Map') }}>
           <FontAwesome5 name="map" size={50} color="white" />
           <Text style={styles.boxText}>Navegar pelo mapa</Text>
         </Pressable>
