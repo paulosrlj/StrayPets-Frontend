@@ -4,6 +4,8 @@ import { View, Text, StyleSheet } from 'react-native'
 import MapView, { Circle, Marker, type Region } from 'react-native-maps'
 import { type MapPressEvent } from 'react-native-maps/lib/MapView.types'
 
+import { FontAwesome5 } from '@expo/vector-icons'
+
 import {
   getCurrentPositionAsync,
   type LocationObject,
@@ -11,6 +13,7 @@ import {
   watchPositionAsync,
   LocationAccuracy
 } from 'expo-location'
+import { Colors } from '../utils/Colors'
 
 interface MarkerType {
   latitude: number
@@ -87,12 +90,7 @@ export default function Map (): JSX.Element {
 
     const coordinates = e.nativeEvent.coordinate
 
-    /* setLocation((oldState: MarkerType) => {
-      const oldLocation = { ...oldState }
-      oldLocation.latitude = coordinates.latitude
-      oldLocation.longitude = coordinates.longitude
-      return oldLocation
-    }) */
+    // setNewLocation(coordinates)
 
     setMarkers((oldState) => {
       return [
@@ -140,7 +138,8 @@ export default function Map (): JSX.Element {
         latitude: location?.latitude ?? 0,
         longitude: location?.longitude ?? 0
       },
-      radius: 0.05 // raio do círculo em quilômetros
+      // radius: 0.05 // raio do círculo em quilômetros
+      radius: 0.1
     }
 
     setNewLocation(region)
@@ -184,7 +183,7 @@ export default function Map (): JSX.Element {
             latitude: location?.latitude ?? 0,
             longitude: location?.longitude ?? 0
           }}
-          radius={50}
+          radius={100}
           fillColor='#62ff9930'
           strokeColor='#62ff99'
         />
@@ -210,7 +209,11 @@ export default function Map (): JSX.Element {
             latitude: marker.latitude,
             longitude: marker.longitude
           }}
-        />
+          // image={{ uri: 'https://cdn-icons-png.flaticon.com/512/4253/4253264.png', width: 50, height: 50 }}
+        >
+          <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
+          {/* <FontAwesome5 name="cat" size={35} color={Colors.primaryPurple} /> */}
+        </Marker>
         ))}
       </MapView>
     </View>
