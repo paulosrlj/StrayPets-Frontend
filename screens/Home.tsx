@@ -15,19 +15,33 @@ export default function Home (): JSX.Element {
   return (
     <View style={styles.container}>
       <View style={styles.innerContainer}>
-        <Pressable style={({ pressed }) => [styles.box, pressed && styles.pressedBox]} onPress={() => { handleNavigation('Map') }}>
+        <Pressable
+          style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}
+          onPress={() => {
+            handleNavigation('Map')
+          }}
+        >
           <FontAwesome5 name="map" size={50} color="white" />
           <Text style={styles.boxText}>Navegar pelo mapa</Text>
         </Pressable>
-        <Pressable style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}>
+        <Pressable
+          style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}
+          onPress={() => {
+            handleNavigation('FindAPet')
+          }}
+        >
           <FontAwesome5 name="map-marker-alt" size={50} color="white" />
           <Text style={styles.boxText}>Buscar um Pet</Text>
         </Pressable>
-        <Pressable style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}>
+        <Pressable
+          style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}
+        >
           <MaterialIcons name="pets" size={50} color="white" />
           <Text style={styles.boxText}>Cadastrar um Pet</Text>
         </Pressable>
-        <Pressable style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}>
+        <Pressable
+          style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}
+        >
           <FontAwesome5 name="question" size={50} color="white" />
           <Text style={styles.boxText}>Buscar animais desaparecidos</Text>
         </Pressable>

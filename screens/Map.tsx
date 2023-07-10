@@ -29,16 +29,28 @@ interface CircleType {
   radius: number
 }
 
-export default function Map (): JSX.Element {
-  const [location, setLocation] = useState<MarkerType>({ latitude: 0, longitude: 0 })
-  const [markers, setMarkers] = useState<MarkerType[]>([])
-  const [markersInsideCircle, setMarkersInsideCircle] = useState<MarkerType[]>([])
+const latitudeDelta = 0.003211034107542865
+const longitudeDelta = 0.0016659870743751526
 
-  const [petInfoModalOpen, setPetInfoModalOpen] = useState(false)
+export default function Map (): JSX.Element {
+  const [userLocation, setUserLocation] = useState<MarkerType>({
+    latitude: 0,
+    longitude: 0
+  })
+  const [location, setLocation] = useState<MarkerType>({
+    latitude: 0,
+    longitude: 0
+  })
+
+  const [markers, setMarkers] = useState<MarkerType[]>([])
+  const [markersInsideCircle, setMarkersInsideCircle] = useState<MarkerType[]>(
+    []
+  )
+
   const navigation = useNavigation<any>()
 
-  const latitudeDelta = 0.0016046847791288954
-  const longitudeDelta = 0.0008324906229972839
+  /* const latitudeDelta = 0.0016046847791288954
+  const longitudeDelta = 0.0008324906229972839 */
 
   const mapRef = useRef<MapView>(null)
 
@@ -47,7 +59,10 @@ export default function Map (): JSX.Element {
 
     if (granted) {
       const currentPosition = await getCurrentPositionAsync()
-      setLocation({ latitude: currentPosition.coords.latitude, longitude: currentPosition.coords.longitude })
+      setUserLocation({
+        latitude: currentPosition.coords.latitude,
+        longitude: currentPosition.coords.longitude
+      })
 
       console.log('localizacao: ', currentPosition)
       return currentPosition
@@ -73,7 +88,10 @@ export default function Map (): JSX.Element {
       },
       (response: LocationObject) => {
         console.log('nova pos: ', response)
-        setLocation({ latitude: response.coords.latitude, longitude: response.coords.longitude })
+        setLocation({
+          latitude: response.coords.latitude,
+          longitude: response.coords.longitude
+        })
         mapRef.current?.animateCamera({
           center: response.coords
         })
@@ -102,13 +120,18 @@ export default function Map (): JSX.Element {
         { latitude: coordinates.latitude, longitude: coordinates.longitude }
       ]
     })
+
+    setNewLocation(coordinates)
   }
 
   function handleRegionChange (e: Region): void {
     console.log('mudou: ', e)
   }
 
-  function isMarkerInsideCircle (marker: MarkerType, circle: CircleType): boolean {
+  function isMarkerInsideCircle (
+    marker: MarkerType,
+    circle: CircleType
+  ): boolean {
     const R = 6371 // raio médio da Terra em quilômetros
     const lat1 = marker.latitude
     const lon1 = marker.longitude
@@ -142,13 +165,12 @@ export default function Map (): JSX.Element {
         latitude: location?.latitude ?? 0,
         longitude: location?.longitude ?? 0
       },
-      // radius: 0.05 // raio do círculo em quilômetros
-      radius: 0.1
+      radius: 0.1 // raio do círculo em quilômetros
     }
 
     setNewLocation(region)
 
-    const markersInside = markers.filter(marker =>
+    const markersInside = markers.filter((marker) =>
       isMarkerInsideCircle(marker, circle)
     )
 
@@ -176,6 +198,12 @@ export default function Map (): JSX.Element {
           handleMapPress(e)
         }}
         initialRegion={{
+          latitude: userLocation?.latitude ?? 0,
+          longitude: userLocation?.longitude ?? 0,
+          latitudeDelta,
+          longitudeDelta
+        }}
+        region={{
           latitude: location?.latitude ?? 0,
           longitude: location?.longitude ?? 0,
           latitudeDelta,
@@ -192,13 +220,13 @@ export default function Map (): JSX.Element {
             longitude: location?.longitude ?? 0
           }}
           radius={100}
-          fillColor='#62ff9930'
-          strokeColor='#62ff99'
+          fillColor="#62ff9930"
+          strokeColor="#62ff99"
         />
         <Marker
           coordinate={{
-            latitude: location?.latitude ?? 0,
-            longitude: location?.longitude ?? 0
+            latitude: userLocation?.latitude ?? 0,
+            longitude: userLocation?.longitude ?? 0
           }}
         />
         {/* {markers.map((marker) => (
@@ -210,19 +238,18 @@ export default function Map (): JSX.Element {
             }}
           />
         ))} */}
-        {markersInsideCircle.map((marker) => (
-        <Marker
-          key={marker.latitude + marker.longitude}
-          coordinate={{
-            latitude: marker.latitude,
-            longitude: marker.longitude
-          }}
-          // image={{ uri: 'https://cdn-icons-png.flaticon.com/512/4253/4253264.png', width: 50, height: 50 }}
-          onPress={handlePetInfoModalOpen}
-        >
-          <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
-          {/* <FontAwesome5 name="cat" size={35} color={Colors.primaryPurple} /> */}
-        </Marker>
+        {markersInsideCircle.map((marker, index) => (
+          <Marker
+            key={index + marker.latitude}
+            coordinate={{
+              latitude: marker.latitude,
+              longitude: marker.longitude
+            }}
+            onPress={handlePetInfoModalOpen}
+          >
+            <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
+            {/* <FontAwesome5 name="cat" size={35} color={Colors.primaryPurple} /> */}
+          </Marker>
         ))}
       </MapView>
     </View>

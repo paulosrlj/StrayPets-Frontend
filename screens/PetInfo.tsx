@@ -81,6 +81,8 @@ export default function PetInfo (): JSX.Element {
           <TextLabel textLabel="Adotado" innerText="Não" />
 
           <TextLabel textLabel="Data de adoção" innerText="20/02/2023" />
+
+          {/* <TextLabel textLabel="Observações" innerText="aifsagjoiasjgiosajogjsagigojasoigjoasjgojasogjaosgjoasjgoajsogjasfgyasugyusaugasgasfgasufgusagfuasgfuagsufgasfguasgfuyaguyashfashfkjsakfsakfhkashfkhakfhka" /> */}
         </View>
         <View style={styles.buttonContainer}>
           <Button

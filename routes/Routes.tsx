@@ -6,6 +6,7 @@ import { Colors } from '../utils/Colors'
 import TabNavigator from './TabNavigator'
 import Map from '../screens/Map'
 import PetInfo from '../screens/PetInfo'
+import FindAPetScreen from '../screens/FindAPetScreen'
 
 const Stack = createNativeStackNavigator()
 
@@ -46,8 +47,16 @@ export default function Routes (): JSX.Element {
           component={PetInfo}
           options={
             {
-              // contentStyle: { backgroundColor: 'red' }
               headerTitle: 'Informações do Pet'
+            }
+          }
+        />
+        <Stack.Screen
+          name="FindAPet"
+          component={FindAPetScreen}
+          options={
+            {
+              headerTitle: 'Buscar um pet'
             }
           }
         />
