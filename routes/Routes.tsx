@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { Colors } from '../utils/Colors'
 import TabNavigator from './TabNavigator'
 import Map from '../screens/Map'
+import PetInfo from '../screens/PetInfo'
 
 const Stack = createNativeStackNavigator()
 
@@ -37,6 +38,16 @@ export default function Routes (): JSX.Element {
           options={
             {
               // contentStyle: { backgroundColor: 'red' }
+            }
+          }
+        />
+        <Stack.Screen
+          name="PetInfo"
+          component={PetInfo}
+          options={
+            {
+              // contentStyle: { backgroundColor: 'red' }
+              headerTitle: 'Informações do Pet'
             }
           }
         />

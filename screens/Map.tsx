@@ -14,6 +14,7 @@ import {
   LocationAccuracy
 } from 'expo-location'
 import { Colors } from '../utils/Colors'
+import { useNavigation } from '@react-navigation/native'
 
 interface MarkerType {
   latitude: number
@@ -32,6 +33,9 @@ export default function Map (): JSX.Element {
   const [location, setLocation] = useState<MarkerType>({ latitude: 0, longitude: 0 })
   const [markers, setMarkers] = useState<MarkerType[]>([])
   const [markersInsideCircle, setMarkersInsideCircle] = useState<MarkerType[]>([])
+
+  const [petInfoModalOpen, setPetInfoModalOpen] = useState(false)
+  const navigation = useNavigation<any>()
 
   const latitudeDelta = 0.0016046847791288954
   const longitudeDelta = 0.0008324906229972839
@@ -160,6 +164,10 @@ export default function Map (): JSX.Element {
     })
   }
 
+  function handlePetInfoModalOpen (): void {
+    navigation.navigate('PetInfo')
+  }
+
   return (
     <View style={styles.container}>
       <MapView
@@ -210,6 +218,7 @@ export default function Map (): JSX.Element {
             longitude: marker.longitude
           }}
           // image={{ uri: 'https://cdn-icons-png.flaticon.com/512/4253/4253264.png', width: 50, height: 50 }}
+          onPress={handlePetInfoModalOpen}
         >
           <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
           {/* <FontAwesome5 name="cat" size={35} color={Colors.primaryPurple} /> */}
