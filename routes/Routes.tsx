@@ -7,6 +7,7 @@ import TabNavigator from './TabNavigator'
 import Map from '../screens/Map'
 import PetInfo from '../screens/PetInfo'
 import FindAPetScreen from '../screens/FindAPetScreen'
+import PetRegister from '../screens/PetRegister'
 
 const Stack = createNativeStackNavigator()
 
@@ -57,6 +58,15 @@ export default function Routes (): JSX.Element {
           options={
             {
               headerTitle: 'Buscar um pet'
+            }
+          }
+        />
+        <Stack.Screen
+          name="PetRegister"
+          component={PetRegister}
+          options={
+            {
+              headerTitle: 'Cadastrar um pet'
             }
           }
         />

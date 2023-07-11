@@ -35,6 +35,9 @@ export default function Home (): JSX.Element {
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}
+          onPress={() => {
+            handleNavigation('PetRegister')
+          }}
         >
           <MaterialIcons name="pets" size={50} color="white" />
           <Text style={styles.boxText}>Cadastrar um Pet</Text>

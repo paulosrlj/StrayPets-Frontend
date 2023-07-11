@@ -1,44 +1,47 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  TextInput,
-  ScrollView
-} from 'react-native'
 import React, { useState } from 'react'
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from 'react-native'
 
-import PickerField from '../components/Form/PickerField'
 import Button from '../components/Button/Button'
 import { Colors } from '../utils/Colors'
 
-import { Ionicons } from '@expo/vector-icons'
+import SelectField from '../components/Form/SelectField'
+import TextField from '../components/Form/TextField'
 
 const deviceWidth = Dimensions.get('window').width
 const deviceHeight = Dimensions.get('window').height
 
 interface FormInfoType {
   petName: string
+  petGender: string
   petType: string
   petBreed: string
   cep: string
+  observations: string
 }
 
 enum FieldToUpdate {
   petName,
+  petGender,
   petType,
   petBreed,
   cep,
+  observations,
 }
 
 export default function FindAPetScreen (): JSX.Element {
-  const [selectedLanguage, setSelectedLanguage] = useState()
-
   const [formInfo, setFormInfo] = useState<FormInfoType>({
     petName: '',
+    petGender: '',
     petType: '',
     petBreed: '',
-    cep: ''
+    cep: '',
+    observations: ''
   })
 
   function handleFormInputChange (
@@ -57,68 +60,77 @@ export default function FindAPetScreen (): JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        <View style={styles.filterField}>
-          <Text style={styles.filterLabel}>Nome: </Text>
-          <TextInput
-            value={formInfo.petName}
-            style={[styles.textInput, styles.border]}
-            cursorColor="black"
-            editable
-            onChangeText={(e) => {
-              handleFormInputChange(e, FieldToUpdate.petName)
-            }}
-          />
-        </View>
+        <TextField
+          label="Nome"
+          value={formInfo.petName}
+          handleInputChange={(value: string) => {
+            handleFormInputChange(value, FieldToUpdate.petName)
+          }}
+        />
 
-        <View style={styles.filterField}>
-          <Text style={styles.filterLabel}>Tipo: </Text>
-          <PickerField
-            pickerItems={[
-              { label: 'Cachorro', value: 'dog' },
-              { label: 'Gato', value: 'cat' }
-            ]}
-            onChange={(e) => {
-              handleFormInputChange(e, FieldToUpdate.petType)
-            }}
-          />
-        </View>
+        <SelectField
+          label="Sexo"
+          pickerItems={[
+            { label: 'Macho', value: 'male' },
+            { label: 'Fêmea', value: 'female' }
+          ]}
+          handleInputChange={(value: string) => {
+            handleFormInputChange(value, FieldToUpdate.petGender)
+          }}
+        />
 
-        <View style={styles.filterField}>
-          <Text style={styles.filterLabel}>Raça: </Text>
-          <PickerField
-            acceptEmptyValue
-            pickerItems={[
-              { label: 'Poddle', value: 'poddle' },
-              { label: 'Golden Retriever', value: 'golden retriever' }
-            ]}
-            onChange={(e) => {
-              handleFormInputChange(e, FieldToUpdate.petName)
-            }}
-          />
-        </View>
+        <SelectField
+          label="Tipo"
+          pickerItems={[
+            { label: 'Cachorro', value: 'dog' },
+            { label: 'Gato', value: 'cat' }
+          ]}
+          handleInputChange={(value: string) => {
+            handleFormInputChange(value, FieldToUpdate.petType)
+          }}
+        />
 
-        <View style={styles.filterField}>
-          <Text style={styles.filterLabel}>CEP: </Text>
-          <TextInput
-            value={formInfo.cep}
-            style={[styles.textInput, styles.border]}
-            cursorColor="black"
-            onChangeText={(e) => {
-              handleFormInputChange(e, FieldToUpdate.cep)
-            }}
-            keyboardType="number-pad"
-            editable={false}
-          />
-           <Text style={styles.filterLabel}>
-              Cajazeiras - PB, 58900-000, Brasil{' '}
-            </Text>
+        <SelectField
+          label="Raça"
+          pickerItems={[
+            { label: 'Poddle', value: 'poddle' },
+            { label: 'Golden Retriever', value: 'golden retriever' }
+          ]}
+          handleInputChange={(value: string) => {
+            handleFormInputChange(value, FieldToUpdate.petBreed)
+          }}
+        />
+
+        <TextField
+          label="Cep"
+          value={formInfo.cep}
+          keyboardType="number-pad"
+          handleInputChange={(value: string) => {
+            handleFormInputChange(value, FieldToUpdate.cep)
+          }}
+        >
+          <Text style={styles.filterLabel}>
+            Cajazeiras - PB, 58900-000, Brasil{' '}
+          </Text>
           <View style={styles.locationBox}>
-            <Button style={{ width: deviceWidth * 0.9 }} textColor="white" backgroundColor={Colors.primaryGreen}>
-              {/* <Ionicons name="locate" size={24} color={Colors.primaryGreen} style={{ }} /> */}{' '}
-              Usar Localização atual
+            <Button
+              style={{ width: deviceWidth * 0.9 }}
+              textColor="white"
+              backgroundColor={Colors.primaryGreen}
+            >
+              Usar localização atual
             </Button>
           </View>
-        </View>
+        </TextField>
+
+        <TextField
+          label="Observações"
+          value={formInfo.observations}
+          handleInputChange={(value: string) => {
+            handleFormInputChange(value, FieldToUpdate.observations)
+          }}
+          textArea
+        />
 
         <View style={styles.buttonBox}>
           <Button style={{ width: deviceWidth * 0.9 }} textColor="white">
