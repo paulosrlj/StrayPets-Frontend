@@ -1,5 +1,6 @@
 import { View, Text, Dimensions, StyleSheet } from 'react-native'
 import React from 'react'
+import PhotoRegister from './PhotoRegister'
 
 const deviceWidth = Dimensions.get('window').width
 const deviceHeight = Dimensions.get('window').height
@@ -7,7 +8,7 @@ const deviceHeight = Dimensions.get('window').height
 export default function PetRegister (): JSX.Element {
   return (
     <View style={styles.container}>
-
+      <PhotoRegister />
     </View>
   )
 }

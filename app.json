@@ -32,6 +32,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow StrayPets to use your location."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow StrayPets to access your camera."
+        }
       ]
     ]
   }

@@ -7,7 +7,7 @@ import TabNavigator from './TabNavigator'
 import Map from '../screens/Map'
 import PetInfo from '../screens/PetInfo'
 import FindAPetScreen from '../screens/FindAPetScreen'
-import PetRegister from '../screens/PetRegister'
+import PetRegister from '../screens/PetRegister/PetRegister'
 
 const Stack = createNativeStackNavigator()
 

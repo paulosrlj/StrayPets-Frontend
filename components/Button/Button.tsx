@@ -1,26 +1,29 @@
+import React, { type ReactNode } from 'react'
 import {
-  View,
-  Text,
-  StyleSheet,
   Pressable,
+  StyleSheet,
+  Text,
   type StyleProp,
   type ViewStyle
 } from 'react-native'
-import React, { type ReactNode } from 'react'
 import { Colors } from '../../utils/Colors'
-
+import { Ionicons } from '@expo/vector-icons'
 interface Props {
   children: ReactNode
   style?: StyleProp<ViewStyle>
   backgroundColor?: string
   textColor?: string
+  onPress?: any
+  icon?: keyof typeof Ionicons.glyphMap
 }
 
 export default function Button ({
   children,
   style,
   backgroundColor,
-  textColor
+  textColor,
+  onPress,
+  icon
 }: Props): JSX.Element {
   return (
     <Pressable
@@ -32,8 +35,11 @@ export default function Button ({
           pressed ? styles.buttonOpacity : null
         ]
       )}
+      onPress={onPress}
     >
-      <Text style={[styles.buttonText, { color: textColor ?? 'black' }]}>
+      {icon && (<Ionicons name={icon} size={20} color="white" style={styles.icon}/>)}
+
+      <Text style={[styles.buttonText, { color: textColor ?? 'white' }]}>
         {children}
       </Text>
     </Pressable>
@@ -42,8 +48,15 @@ export default function Button ({
 
 const styles = StyleSheet.create({
   button: {
+    marginVertical: 10,
     padding: 10,
-    borderRadius: 6
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row'
+  },
+  icon: {
+    marginRight: 5
   },
   buttonText: {
     textAlign: 'center',
