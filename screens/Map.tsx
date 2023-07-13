@@ -15,19 +15,7 @@ import {
 } from 'expo-location'
 import { Colors } from '../utils/Colors'
 import { useNavigation } from '@react-navigation/native'
-
-interface MarkerType {
-  latitude: number
-  longitude: number
-}
-
-interface CircleType {
-  center: {
-    latitude: number
-    longitude: number
-  }
-  radius: number
-}
+import { type CircleType, type MarkerType } from '../types/MapTypes'
 
 const latitudeDelta = 0.003211034107542865
 const longitudeDelta = 0.0016659870743751526

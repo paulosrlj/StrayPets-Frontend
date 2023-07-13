@@ -44,6 +44,9 @@ export default function Home (): JSX.Element {
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}
+          onPress={() => {
+            handleNavigation('MissingPets')
+          }}
         >
           <FontAwesome5 name="question" size={50} color="white" />
           <Text style={styles.boxText}>Buscar animais desaparecidos</Text>

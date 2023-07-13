@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import {
-  View,
-  Pressable,
-  StyleSheet,
-  Image,
   Dimensions,
-  FlatList
+  FlatList,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View
 } from 'react-native'
 import ImageView from 'react-native-image-viewing'
 
@@ -14,8 +15,8 @@ import PetImage2 from './dog2.jpg'
 import PetImage3 from './dog3.png'
 
 import Button from '../components/Button/Button'
-import { Colors } from '../utils/Colors'
 import TextLabel from '../components/Text/TextLabel'
+import { Colors } from '../utils/Colors'
 
 const deviceWidth = Dimensions.get('window').width
 const deviceHeight = Dimensions.get('window').height
@@ -37,17 +38,31 @@ const images = [
   }
 ]
 
-export default function PetInfo (): JSX.Element {
+interface Props {
+  missingPet?: boolean
+}
+
+export default function PetInfo ({ missingPet }: Props): JSX.Element {
   const [visible, setIsVisible] = useState(false)
+  const [imageToOpen, setImageToOpen] = useState(0)
+
+  function handleImagePress (index: number): void {
+    setImageToOpen(index)
+    setIsVisible(true)
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.petContainer}>
         <FlatList
           data={Pets}
-          renderItem={({ item }) => (
-            <Pressable onPress={() => { setIsVisible(true) }}>
-              <Image source={item} style={styles.petImage} />
+          renderItem={({ item, index }) => (
+            <Pressable
+              onPress={() => {
+                handleImagePress(index)
+              }}
+            >
+              <Image key={index} source={item} style={styles.petImage} />
             </Pressable>
           )}
           horizontal
@@ -57,33 +72,40 @@ export default function PetInfo (): JSX.Element {
 
         <ImageView
           images={Pets}
-          imageIndex={0}
+          imageIndex={imageToOpen}
           visible={visible}
           onRequestClose={() => {
             setIsVisible(false)
           }}
         />
+        <ScrollView>
+          <View style={styles.textContainer}>
+            <TextLabel textLabel="Nome" innerText="Bolinha" />
 
-        <View style={styles.textContainer}>
-          <TextLabel textLabel="Nome" innerText="Bolinha" />
+            <TextLabel textLabel="Tipo" innerText="Cachorro" />
 
-          <TextLabel textLabel="Tipo" innerText="Cachorro" />
+            <TextLabel textLabel="Raça" innerText="Golden Retriver" />
 
-          <TextLabel textLabel="Raça" innerText="Golden Retriver" />
+            <TextLabel textLabel="Localização" innerText="Cajazeiras-PB" />
 
-          <TextLabel textLabel="Localização" innerText="Cajazeiras-PB" />
+            <TextLabel
+              textLabel="Endereço aproximado"
+              innerText="Rua Julio Pajeu"
+            />
 
-          <TextLabel
-            textLabel="Endereço aproximado"
-            innerText="Rua Julio Pajeu"
-          />
+            <TextLabel textLabel="Adotado" innerText="Não" />
 
-          <TextLabel textLabel="Adotado" innerText="Não" />
+            <TextLabel textLabel="Data de adoção" innerText="20/02/2023" />
 
-          <TextLabel textLabel="Data de adoção" innerText="20/02/2023" />
+            <TextLabel textLabel="Desaparecido" innerText="Não" />
 
-          {/* <TextLabel textLabel="Observações" innerText="aifsagjoiasjgiosajogjsagigojasoigjoasjgojasogjaosgjoasjgoajsogjasfgyasugyusaugasgasfgasufgusagfuasgfuagsufgasfguasgfuyaguyashfashfkjsakfsakfhkashfkhakfhka" /> */}
-        </View>
+            <TextLabel
+              textLabel="Observações"
+              innerText="aifsagjoiasjgiosajogjsagigojasoigjoasjgojasogjaosgjoasjgoajsogjasfgyasugyusaugasgasfgasufgusagfuasgfuagsufgasfguasgfuyaguyashfashfkjsakfsakfhkashfkhakfhka"
+            />
+          </View>
+        </ScrollView>
+
         <View style={styles.buttonContainer}>
           <Button
             style={{ marginBottom: 10, width: deviceWidth * 0.8 }}
@@ -97,7 +119,7 @@ export default function PetInfo (): JSX.Element {
             textColor="white"
             backgroundColor={Colors.primaryGreen}
           >
-            Eu adotei esse pet!
+            {missingPet ? 'Eu encontrei esse pet!' : 'Eu adotei esse pet!'}
           </Button>
         </View>
       </View>
@@ -116,17 +138,19 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   listContainer: {
-    maxHeight: 300
-    // backgroundColor: 'yellow'
+    maxHeight: 250,
+    minHeight: 250
   },
   petImage: {
     width: deviceWidth,
     height: 250,
-    marginTop: 40
+    minHeight: 250,
+    backgroundColor: 'red'
+
   },
   textContainer: {
     alignItems: 'center',
-    marginVertical: 40
+    marginTop: 40
   },
   textLabel: {
     marginVertical: 5
@@ -138,7 +162,9 @@ const styles = StyleSheet.create({
   innerText: {
     fontWeight: 'normal'
   },
-  buttonContainer: {},
+  buttonContainer: {
+
+  },
   buttonSpacing: {
     marginRight: 10
   }

@@ -18,7 +18,8 @@ export default function TextLabel ({ textLabel, innerText }: Props): JSX.Element
 
 const styles = StyleSheet.create({
   textLabel: {
-    marginVertical: 5
+    marginVertical: 10,
+    marginHorizontal: 40
   },
   text: {
     fontSize: 16,
