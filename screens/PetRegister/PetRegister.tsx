@@ -1,14 +1,20 @@
 import { View, Text, Dimensions, StyleSheet } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import PhotoRegister from './PhotoRegister'
+import PetDataRegister from './PetDataRegister'
 
 const deviceWidth = Dimensions.get('window').width
 const deviceHeight = Dimensions.get('window').height
 
 export default function PetRegister (): JSX.Element {
+  const [formPage, setFormPage] = useState(2)
+
   return (
     <View style={styles.container}>
-      <PhotoRegister />
+
+      {formPage === 1 && (<PhotoRegister />)}
+      {formPage === 2 && (<PetDataRegister />)}
+
     </View>
   )
 }
