@@ -1,7 +1,7 @@
+import { Ionicons } from '@expo/vector-icons'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import Home from '../screens/Home'
-import { Ionicons } from '@expo/vector-icons'
-import Map from '../screens/Map'
+import Settings from '../screens/Settings'
 import { Colors } from '../utils/Colors'
 
 const Tab = createBottomTabNavigator()
@@ -34,11 +34,12 @@ export default function TabNavigator (): JSX.Element {
     />
     <Tab.Screen
       name="Settings"
-      component={Map}
+      component={Settings}
       options={{
         tabBarIcon: ({ color, size }) => (
           <Ionicons name="settings" color={color} size={size} />
-        )
+        ),
+        headerTitle: 'Configurações'
       }}
     />
   </Tab.Navigator>
