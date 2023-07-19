@@ -1,6 +1,8 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 
+import axios, { AxiosError } from 'axios'
+
 import MapView, { Circle, Marker, type Region } from 'react-native-maps'
 import { type MapPressEvent } from 'react-native-maps/lib/MapView.types'
 
@@ -16,6 +18,7 @@ import {
 import { Colors } from '../utils/Colors'
 import { useNavigation } from '@react-navigation/native'
 import { type CircleType, type MarkerType } from '../types/MapTypes'
+import { type PetTypeResponse } from '../types/PetTypes'
 
 const latitudeDelta = 0.003211034107542865
 const longitudeDelta = 0.0016659870743751526
@@ -34,6 +37,7 @@ export default function Map (): JSX.Element {
   const [markersInsideCircle, setMarkersInsideCircle] = useState<MarkerType[]>(
     []
   )
+  const [pets, setPets] = useState<PetTypeResponse[]>([])
 
   const navigation = useNavigation<any>()
 
@@ -93,8 +97,44 @@ export default function Map (): JSX.Element {
       })
   }, [])
 
+  useEffect(() => {
+    async function getPetsByArea (): Promise<PetTypeResponse[] | null> {
+      try {
+        const cep = '58900000'
+        const sub_locality = 'Cristo Rei'
+
+        const response = await axios.get(
+          `http://192.168.2.104:8080/api/pet/queryPet?cep=${cep}&sub_locality=${sub_locality}`,
+          {
+            headers: {
+              Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJTdHJheVBldHNBcGkiLCJzdWIiOiJwYXVsb0BnbWFpbC5jb20iLCJleHAiOjE2ODk3OTY5MDN9.S6kOmSW91SGgZ0QzDAoHN2fEuC8CBjxw8i7OLTTcelw'}`
+            }
+          }
+        )
+        const data = response.data as PetTypeResponse[]
+
+        return data
+      } catch (error) {
+        console.log('ERRO', error)
+      }
+
+      return null
+    }
+
+    getPetsByArea()
+      .then((response) => {
+        setPetMarkers(response as PetTypeResponse[])
+      })
+      .catch((error: Error) => {
+        console.error(error)
+      })
+  }, [])
+
+  function setPetMarkers (petsArr: PetTypeResponse[]): void {
+    setPets(petsArr)
+  }
+
   function handleMapPress (e: MapPressEvent): void {
-    console.log('ADS')
     console.log(e.nativeEvent)
     console.log(e.nativeEvent.coordinate)
 
@@ -111,10 +151,10 @@ export default function Map (): JSX.Element {
 
     setNewLocation(coordinates)
   }
-
+  /*
   function handleRegionChange (e: Region): void {
     console.log('mudou: ', e)
-  }
+  } */
 
   function isMarkerInsideCircle (
     marker: MarkerType,
@@ -147,7 +187,6 @@ export default function Map (): JSX.Element {
   }
 
   const handleRegionChangeComplete = (region: Region): void => {
-    console.log('Trigou')
     const circle = {
       center: {
         latitude: location?.latitude ?? 0,
@@ -197,12 +236,12 @@ export default function Map (): JSX.Element {
           latitudeDelta,
           longitudeDelta
         }}
-        onRegionChange={handleRegionChange}
-        onRegionChangeComplete={handleRegionChangeComplete}
+        /* onRegionChange={handleRegionChange} */
+        /* onRegionChangeComplete={handleRegionChangeComplete} */
         zoomControlEnabled={true}
         style={styles.container}
       >
-        <Circle
+        {/* <Circle
           center={{
             latitude: location?.latitude ?? 0,
             longitude: location?.longitude ?? 0
@@ -210,7 +249,7 @@ export default function Map (): JSX.Element {
           radius={100}
           fillColor="#62ff9930"
           strokeColor="#62ff99"
-        />
+        /> */}
         <Marker
           coordinate={{
             latitude: userLocation?.latitude ?? 0,
@@ -226,7 +265,27 @@ export default function Map (): JSX.Element {
             }}
           />
         ))} */}
-        {markersInsideCircle.map((marker, index) => (
+
+        {pets.map((pet, index) => (
+          <Marker
+            key={index + pet.id}
+            coordinate={{
+              latitude: pet.location.latitude,
+              longitude: pet.location.longitude
+            }}
+            onPress={handlePetInfoModalOpen}
+          >
+            {pet.type === 'CACHORRO'
+              ? (
+              <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
+                )
+              : (
+              <FontAwesome5 name="cat" size={35} color={Colors.primaryPurple} />
+                )}
+          </Marker>
+        ))}
+
+        {/* {markersInsideCircle.map((marker, index) => (
           <Marker
             key={index + marker.latitude}
             coordinate={{
@@ -236,9 +295,8 @@ export default function Map (): JSX.Element {
             onPress={handlePetInfoModalOpen}
           >
             <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
-            {/* <FontAwesome5 name="cat" size={35} color={Colors.primaryPurple} /> */}
           </Marker>
-        ))}
+        ))} */}
       </MapView>
     </View>
   )
