@@ -1,15 +1,14 @@
 export interface PetTypeResponse {
   id: number
-  name: string
+  name?: string
   type: string
-  gender: string
-  breed: string
-  adoption_date: Date
-  comments: string
-  missing: boolean
+  gender?: string
+  breed?: string
+  adoption_date?: Date
+  comments?: string
+  missing?: boolean
   location: LocationType
   photos: PhotosType[]
-
 }
 
 export interface LocationType {
@@ -20,10 +19,11 @@ export interface LocationType {
 }
 
 export interface AddressType {
+  full_address: string
   cep: string
-  logradouro: string
-  bairro: string
-  cidade: string
+  street?: string
+  sub_locality?: string
+  city?: string
 }
 
 export interface PhotosType {

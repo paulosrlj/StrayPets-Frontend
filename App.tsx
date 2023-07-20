@@ -1,6 +1,8 @@
 import React from 'react'
 import { SafeAreaView, StatusBar, StyleSheet } from 'react-native'
 
+import { RootSiblingParent } from 'react-native-root-siblings'
+
 import Routes from './routes/Routes'
 import { Colors } from './utils/Colors'
 
@@ -12,8 +14,10 @@ export default function App (): JSX.Element {
         colors={['#843AA7', '#983BAF', '#661C80']}
         style={[styles.rootScreen, styles.SafeAreaView]}
       > */}
-        <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" />
+      <RootSiblingParent>
         <Routes />
+      </RootSiblingParent>
       {/* </LinearGradient> */}
     </>
   )

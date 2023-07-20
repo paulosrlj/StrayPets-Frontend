@@ -1,42 +1,56 @@
-import React, { useEffect, useLayoutEffect, useState, useRef } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 
-import axios, { AxiosError } from 'axios'
+import axios from '../utils/api/axios'
 
-import MapView, { Circle, Marker, type Region } from 'react-native-maps'
+import MapView, { Marker, type Region } from 'react-native-maps'
 import { type MapPressEvent } from 'react-native-maps/lib/MapView.types'
 
 import { FontAwesome5 } from '@expo/vector-icons'
 
+import Toast from 'react-native-root-toast'
+
+import { useNavigation } from '@react-navigation/native'
 import {
+  LocationAccuracy,
   getCurrentPositionAsync,
-  type LocationObject,
   requestForegroundPermissionsAsync,
   watchPositionAsync,
-  LocationAccuracy
+  type LocationObject
 } from 'expo-location'
-import { Colors } from '../utils/Colors'
-import { useNavigation } from '@react-navigation/native'
-import { type CircleType, type MarkerType } from '../types/MapTypes'
+import PermissionError from '../errors/PermissionError'
 import { type PetTypeResponse } from '../types/PetTypes'
+import { defaultValues, type AddressType } from '../types/geolocationTypes'
+import { Colors } from '../utils/Colors'
+import { debounce } from '../utils/debounceFn'
 
-const latitudeDelta = 0.003211034107542865
-const longitudeDelta = 0.0016659870743751526
+const initialLatitudeDelta = 0.003211034107542865
+const initialLongitudeDelta = 0.0016659870743751526
+
+const toastConfig = {
+  duration: Toast.durations.LONG,
+  position: Toast.positions.BOTTOM,
+  shadow: true,
+  animation: true,
+  hideOnPress: true,
+  delay: 0
+}
 
 export default function Map (): JSX.Element {
-  const [userLocation, setUserLocation] = useState<MarkerType>({
-    latitude: 0,
-    longitude: 0
-  })
-  const [location, setLocation] = useState<MarkerType>({
-    latitude: 0,
-    longitude: 0
+  const [userLocation, setUserLocation] = useState<AddressType | null>({
+    ...defaultValues
   })
 
-  const [markers, setMarkers] = useState<MarkerType[]>([])
-  const [markersInsideCircle, setMarkersInsideCircle] = useState<MarkerType[]>(
-    []
-  )
+  const [location, setLocation] = useState<AddressType>({ ...defaultValues })
+
+  const [loading, setLoading] = useState(true)
+
   const [pets, setPets] = useState<PetTypeResponse[]>([])
 
   const navigation = useNavigation<any>()
@@ -46,171 +60,148 @@ export default function Map (): JSX.Element {
 
   const mapRef = useRef<MapView>(null)
 
-  async function requestLocationPermission (): Promise<LocationObject | null> {
-    const { granted } = await requestForegroundPermissionsAsync()
+  const getAddress = useCallback(
+    async (latitude: number, longitude: number): Promise<AddressType> => {
+      const response = await axios.get(
+        `/api/maps?latitude=${latitude}&longitude=${longitude}`
+      )
+      const data = response.data as AddressType
 
-    if (granted) {
-      const currentPosition = await getCurrentPositionAsync()
-      setUserLocation({
-        latitude: currentPosition.coords.latitude,
-        longitude: currentPosition.coords.longitude
-      })
+      return data
+    },
+    []
+  )
 
-      console.log('localizacao: ', currentPosition)
-      return currentPosition
+  const getPetsByArea = useCallback(
+    async (state: string, city: string): Promise<PetTypeResponse[]> => {
+      const response = await axios.get(
+        `/api/pet/queryPet?state=${state}&city=${city}`
+      )
+      const data = response.data as PetTypeResponse[]
+
+      return data
+    },
+    []
+  )
+
+  const requestLocationPermission =
+    useCallback(async (): Promise<LocationObject> => {
+      const { granted } = await requestForegroundPermissionsAsync()
+
+      if (granted) {
+        const currentPosition = await getCurrentPositionAsync()
+
+        if (currentPosition === null) {
+          throw new PermissionError('Ocorreu um erro ao obter a posição.')
+        }
+
+        return currentPosition
+      }
+
+      throw new PermissionError('A permissão de localização não foi aceita.')
+    }, [])
+
+  const verifyIfAddressChanged = useCallback(
+    (address: AddressType): boolean => {
+      if (address.city !== location.city) return true
+      else if (address.state !== location.state) return true
+      else return false
+    },
+    [location.city, location.state]
+  )
+
+  const handleRegionChangeComplete = async (region: Region): Promise<void> => {
+    console.log('HANDLE_REGION_CHANGE')
+    // Buscar o cep e bairro do novo endereço
+    const address = await getAddress(region.latitude, region.longitude)
+
+    if (verifyIfAddressChanged(address)) {
+      console.log('ENDEREÇO_MUDOU')
+      const pets = await getPetsByArea(address.state, address.city)
+
+      setPets(pets)
     }
 
-    return null
+    const newLocation: AddressType = {
+      ...address,
+      latitudeDelta: region.latitudeDelta,
+      longitudeDelta: region.longitudeDelta
+    }
+    setLocation(newLocation)
   }
+
+  const handleRegionChangeCompleteDebounced = debounce(
+    handleRegionChangeComplete,
+    3000
+  )
 
   useLayoutEffect(() => {
     requestLocationPermission()
-      .then((response) => {})
-      .catch((error) => {
-        console.log(error)
-      })
-  }, [])
+      .then(async (response) => {
+        const address = await getAddress(
+          response.coords.latitude,
+          response.coords.longitude
+        )
 
-  useEffect(() => {
-    watchPositionAsync(
-      {
-        accuracy: LocationAccuracy.Highest,
-        timeInterval: 1000,
-        distanceInterval: 1
-      },
-      (response: LocationObject) => {
-        console.log('nova pos: ', response)
-        setLocation({
-          latitude: response.coords.latitude,
-          longitude: response.coords.longitude
-        })
+        const pets = await getPetsByArea(address.state, address.city)
+        setPets(pets)
+
+        setUserLocation(address)
+        setLocation(address)
+
         mapRef.current?.animateCamera({
           center: response.coords
         })
-      }
-    )
-      .catch((res) => {
-        console.log(res)
+
+        setLoading(false)
       })
-      .catch((err) => {
-        console.log(err)
+      .catch((error) => {
+        if (error instanceof PermissionError) {
+          Toast.show(error.message, toastConfig)
+        }
+        console.error(error)
+        Toast.show(error.message, toastConfig)
+        setLoading(false)
       })
-  }, [])
+  }, [getPetsByArea, getAddress, requestLocationPermission])
 
   useEffect(() => {
-    async function getPetsByArea (): Promise<PetTypeResponse[] | null> {
-      try {
-        const cep = '58900000'
-        const sub_locality = 'Cristo Rei'
+    console.log('WATCH_POSITION_ASYNC')
+    watchPositionAsync(
+      {
+        accuracy: LocationAccuracy.Highest,
+        timeInterval: 10000,
+        distanceInterval: 1
+      },
+      async (response: LocationObject) => {
+        const lat = response.coords.latitude
+        const lon = response.coords.longitude
 
-        const response = await axios.get(
-          `http://192.168.2.104:8080/api/pet/queryPet?cep=${cep}&sub_locality=${sub_locality}`,
-          {
-            headers: {
-              Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJTdHJheVBldHNBcGkiLCJzdWIiOiJwYXVsb0BnbWFpbC5jb20iLCJleHAiOjE2ODk3OTY5MDN9.S6kOmSW91SGgZ0QzDAoHN2fEuC8CBjxw8i7OLTTcelw'}`
-            }
-          }
-        )
-        const data = response.data as PetTypeResponse[]
+        const address = await getAddress(lat, lon)
 
-        return data
-      } catch (error) {
-        console.log('ERRO', error)
+        if (verifyIfAddressChanged(address)) {
+          const pets = await getPetsByArea(address.cep, address.sub_location)
+          setPets(pets)
+        }
+
+        setUserLocation(address)
       }
-
-      return null
-    }
-
-    getPetsByArea()
-      .then((response) => {
-        setPetMarkers(response as PetTypeResponse[])
-      })
-      .catch((error: Error) => {
-        console.error(error)
-      })
-  }, [])
-
-  function setPetMarkers (petsArr: PetTypeResponse[]): void {
-    setPets(petsArr)
-  }
+    ).catch((error) => {
+      console.log(error)
+    })
+  }, [
+    getAddress,
+    getPetsByArea,
+    verifyIfAddressChanged,
+    location.latitudeDelta,
+    location.longitudeDelta
+  ])
 
   function handleMapPress (e: MapPressEvent): void {
     console.log(e.nativeEvent)
     console.log(e.nativeEvent.coordinate)
 
     const coordinates = e.nativeEvent.coordinate
-
-    // setNewLocation(coordinates)
-
-    setMarkers((oldState) => {
-      return [
-        ...oldState,
-        { latitude: coordinates.latitude, longitude: coordinates.longitude }
-      ]
-    })
-
-    setNewLocation(coordinates)
-  }
-  /*
-  function handleRegionChange (e: Region): void {
-    console.log('mudou: ', e)
-  } */
-
-  function isMarkerInsideCircle (
-    marker: MarkerType,
-    circle: CircleType
-  ): boolean {
-    const R = 6371 // raio médio da Terra em quilômetros
-    const lat1 = marker.latitude
-    const lon1 = marker.longitude
-    const lat2 = circle.center.latitude
-    const lon2 = circle.center.longitude
-
-    const dLat = toRad(lat2 - lat1)
-    const dLon = toRad(lon2 - lon1)
-
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2)
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    const distance = R * c
-
-    return distance <= circle.radius
-  }
-
-  function toRad (value: number): number {
-    return (value * Math.PI) / 180
-  }
-
-  const handleRegionChangeComplete = (region: Region): void => {
-    const circle = {
-      center: {
-        latitude: location?.latitude ?? 0,
-        longitude: location?.longitude ?? 0
-      },
-      radius: 0.1 // raio do círculo em quilômetros
-    }
-
-    setNewLocation(region)
-
-    const markersInside = markers.filter((marker) =>
-      isMarkerInsideCircle(marker, circle)
-    )
-
-    setMarkersInsideCircle(markersInside)
-  }
-
-  function setNewLocation (coordinates: MarkerType): void {
-    setLocation((oldState: MarkerType) => {
-      const oldLocation = { ...oldState }
-      oldLocation.latitude = coordinates.latitude
-      oldLocation.longitude = coordinates.longitude
-      return oldLocation
-    })
   }
 
   function handlePetInfoModalOpen (): void {
@@ -219,85 +210,62 @@ export default function Map (): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        onPress={(e) => {
-          handleMapPress(e)
-        }}
-        initialRegion={{
-          latitude: userLocation?.latitude ?? 0,
-          longitude: userLocation?.longitude ?? 0,
-          latitudeDelta,
-          longitudeDelta
-        }}
-        region={{
-          latitude: location?.latitude ?? 0,
-          longitude: location?.longitude ?? 0,
-          latitudeDelta,
-          longitudeDelta
-        }}
-        /* onRegionChange={handleRegionChange} */
-        /* onRegionChangeComplete={handleRegionChangeComplete} */
-        zoomControlEnabled={true}
-        style={styles.container}
-      >
-        {/* <Circle
-          center={{
+      {loading
+        ? (
+        <View style={styles.textContainer}>
+          <Text style={styles.loadingText}>Carregando...</Text>
+        </View>
+          )
+        : (
+        <MapView
+          ref={mapRef}
+          onPress={(e) => {
+            handleMapPress(e)
+          }}
+          initialRegion={{
             latitude: location?.latitude ?? 0,
-            longitude: location?.longitude ?? 0
+            longitude: location?.longitude ?? 0,
+            latitudeDelta: initialLatitudeDelta,
+            longitudeDelta: initialLongitudeDelta
           }}
-          radius={100}
-          fillColor="#62ff9930"
-          strokeColor="#62ff99"
-        /> */}
-        <Marker
-          coordinate={{
-            latitude: userLocation?.latitude ?? 0,
-            longitude: userLocation?.longitude ?? 0
-          }}
-        />
-        {/* {markers.map((marker) => (
+          onRegionChangeComplete={handleRegionChangeCompleteDebounced}
+          zoomControlEnabled={true}
+          style={styles.container}
+        >
           <Marker
-            key={marker.latitude + marker.longitude}
             coordinate={{
-              latitude: marker.latitude,
-              longitude: marker.longitude
+              latitude: userLocation?.latitude ?? 0,
+              longitude: userLocation?.longitude ?? 0
             }}
           />
-        ))} */}
-
-        {pets.map((pet, index) => (
-          <Marker
-            key={index + pet.id}
-            coordinate={{
-              latitude: pet.location.latitude,
-              longitude: pet.location.longitude
-            }}
-            onPress={handlePetInfoModalOpen}
-          >
-            {pet.type === 'CACHORRO'
-              ? (
-              <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
-                )
-              : (
-              <FontAwesome5 name="cat" size={35} color={Colors.primaryPurple} />
-                )}
-          </Marker>
-        ))}
-
-        {/* {markersInsideCircle.map((marker, index) => (
-          <Marker
-            key={index + marker.latitude}
-            coordinate={{
-              latitude: marker.latitude,
-              longitude: marker.longitude
-            }}
-            onPress={handlePetInfoModalOpen}
-          >
-            <FontAwesome5 name="dog" size={35} color={Colors.primaryPurple} />
-          </Marker>
-        ))} */}
-      </MapView>
+          {pets.map((pet, index) => (
+            <Marker
+              key={index + pet.location.latitude}
+              coordinate={{
+                latitude: pet.location.latitude,
+                longitude: pet.location.longitude
+              }}
+              onPress={handlePetInfoModalOpen}
+            >
+              {pet.type === 'CACHORRO'
+                ? (
+                <FontAwesome5
+                  name="dog"
+                  size={35}
+                  color={Colors.primaryPurple}
+                />
+                  )
+                : (
+                <FontAwesome5
+                  name="cat"
+                  size={35}
+                  color={Colors.primaryGreen}
+                />
+                  )}
+            </Marker>
+          ))}
+        </MapView>
+          )}
     </View>
   )
 }
@@ -305,5 +273,13 @@ export default function Map (): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1
+  },
+  textContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingText: {
+    fontSize: 16
   }
 })
