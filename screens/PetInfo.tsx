@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 import {
   Dimensions,
   FlatList,
@@ -6,63 +6,145 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   View
 } from 'react-native'
 import ImageView from 'react-native-image-viewing'
 
-import PetImage from './dog.jpg'
-import PetImage2 from './dog2.jpg'
-import PetImage3 from './dog3.png'
-
+import { useNavigation } from '@react-navigation/native'
 import Button from '../components/Button/Button'
 import TextLabel from '../components/Text/TextLabel'
 import { Colors } from '../utils/Colors'
+import axiosInstance from '../utils/api/axios'
 
 const deviceWidth = Dimensions.get('window').width
-const deviceHeight = Dimensions.get('window').height
 
-console.log(deviceHeight)
-console.log(deviceWidth)
-
-const Pets = [PetImage, PetImage2, PetImage3]
-
-const images = [
-  {
-    uri: PetImage
-  },
-  {
-    uri: PetImage2
-  },
-  {
-    uri: PetImage3
-  }
-]
+export interface PetInfoRouteParams {
+  id: number
+}
 
 interface Props {
   missingPet?: boolean
+  route: any
 }
 
-export default function PetInfo ({ missingPet }: Props): JSX.Element {
+interface PetType {
+  id: number
+  name?: string
+  type: string
+  gender?: string
+  breed?: string
+  adoption_date?: string
+  comments?: string
+  missing: string
+  location: {
+    latitude: number
+    longitude: number
+    address: {
+      cep: string
+      street: string
+      sub_location: string
+      city: string
+    }
+  }
+  photos: PhotoType[]
+}
+
+interface PhotoType {
+  id: number
+  photo_name: string
+  photo_uri: string
+}
+
+const defaultValue = {
+  id: 0,
+  name: '',
+  type: '',
+  gender: '',
+  breed: '',
+  adoption_date: '',
+  comments: '',
+  missing: '',
+  location: {
+    latitude: 0,
+    longitude: 0,
+    address: {
+      cep: '',
+      street: '',
+      sub_location: '',
+      city: ''
+    }
+  },
+  photos: []
+}
+
+interface PhotoType {
+  id: number
+  photo_name: string
+  photo_uri: string
+}
+
+export default function PetInfo ({ missingPet, route }: Props & PetInfoRouteParams): JSX.Element {
+  const [loading, setLoading] = useState(true)
+
   const [visible, setIsVisible] = useState(false)
   const [imageToOpen, setImageToOpen] = useState(0)
+  const [pet, setPet] = useState<PetType>({ ...defaultValue })
+
+  const navigation = useNavigation<any>()
+
+  const { id } = route.params
+
+  console.log(id)
+
+  useLayoutEffect(() => {
+    async function fetchPet (): Promise<PetType> {
+      const pet = await axiosInstance.get(`/api/pet/${id}`)
+      const data = pet.data as PetType
+      console.log(data.photos)
+      return data
+    }
+
+    fetchPet()
+      .then(response => {
+        setPet(response)
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error(error)
+        setLoading(false)
+      })
+  }, [id])
 
   function handleImagePress (index: number): void {
     setImageToOpen(index)
     setIsVisible(true)
   }
 
+  const photoUris = pet.photos.map((photo: PhotoType) => ({ uri: photo.photo_uri }))
+
+  function handlePressMap (): void {
+    navigation.navigate('Map', { latitude: pet.location.latitude, longitude: pet.location.longitude })
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.petContainer}>
-        <FlatList
-          data={Pets}
+        {loading
+          ? (
+          <Text>Carregando...</Text>
+            )
+          : (
+          <>
+          <FlatList
+          data={pet.photos}
           renderItem={({ item, index }) => (
             <Pressable
               onPress={() => {
                 handleImagePress(index)
               }}
             >
-              <Image key={index} source={item} style={styles.petImage} />
+              <Image key={index} source={{ uri: item.photo_uri }} style={styles.petImage} />
             </Pressable>
           )}
           horizontal
@@ -71,7 +153,7 @@ export default function PetInfo ({ missingPet }: Props): JSX.Element {
         />
 
         <ImageView
-          images={Pets}
+          images={photoUris}
           imageIndex={imageToOpen}
           visible={visible}
           onRequestClose={() => {
@@ -80,28 +162,28 @@ export default function PetInfo ({ missingPet }: Props): JSX.Element {
         />
         <ScrollView>
           <View style={styles.textContainer}>
-            <TextLabel textLabel="Nome" innerText="Bolinha" />
+            <TextLabel textLabel="Nome" innerText={pet.name?.length === 0 ? 'N/A' : pet.name}/>
 
-            <TextLabel textLabel="Tipo" innerText="Cachorro" />
+            <TextLabel textLabel="Tipo" innerText={pet.type} />
 
-            <TextLabel textLabel="Raça" innerText="Golden Retriver" />
+            <TextLabel textLabel="Raça" innerText={pet.breed ?? 'N/A'} />
 
-            <TextLabel textLabel="Localização" innerText="Cajazeiras-PB" />
+            <TextLabel textLabel="Localização" innerText={pet.location.address.city ?? 'N/A'} />
 
             <TextLabel
               textLabel="Endereço aproximado"
-              innerText="Rua Julio Pajeu"
+              innerText={pet.location.address.street}
             />
 
-            <TextLabel textLabel="Adotado" innerText="Não" />
+            <TextLabel textLabel="Adotado" innerText={pet.adoption_date ? 'Sim' : 'Não'} />
 
-            <TextLabel textLabel="Data de adoção" innerText="20/02/2023" />
+            <TextLabel textLabel="Data de adoção" innerText={new Date(pet.adoption_date!).toLocaleDateString() ?? 'N/A'} />
 
-            <TextLabel textLabel="Desaparecido" innerText="Não" />
+            <TextLabel textLabel="Desaparecido" innerText={pet.missing ? 'Sim' : 'Não'} />
 
             <TextLabel
               textLabel="Observações"
-              innerText="aifsagjoiasjgiosajogjsagigojasoigjoasjgojasogjaosgjoasjgoajsogjasfgyasugyusaugasgasfgasufgusagfuasgfuagsufgasfguasgfuyaguyashfashfkjsakfsakfhkashfkhakfhka"
+              innerText={pet.comments?.length === 0 ? 'N/A' : pet.comments}
             />
           </View>
         </ScrollView>
@@ -111,6 +193,7 @@ export default function PetInfo ({ missingPet }: Props): JSX.Element {
             style={{ marginBottom: 10, width: deviceWidth * 0.8 }}
             textColor="white"
             backgroundColor={Colors.primaryBlue}
+            onPress={() => { handlePressMap() }}
           >
             Mostrar no mapa
           </Button>
@@ -122,6 +205,8 @@ export default function PetInfo ({ missingPet }: Props): JSX.Element {
             {missingPet ? 'Eu encontrei esse pet!' : 'Eu adotei esse pet!'}
           </Button>
         </View>
+          </>
+            )}
       </View>
     </View>
   )
@@ -133,9 +218,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     backgroundColor: '#e8e8e8'
   },
+
   petContainer: {
     flex: 1,
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   listContainer: {
     maxHeight: 250,
@@ -144,9 +231,7 @@ const styles = StyleSheet.create({
   petImage: {
     width: deviceWidth,
     height: 250,
-    minHeight: 250,
-    backgroundColor: 'red'
-
+    minHeight: 250
   },
   textContainer: {
     alignItems: 'center',

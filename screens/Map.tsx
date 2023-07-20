@@ -42,7 +42,11 @@ const toastConfig = {
   delay: 0
 }
 
-export default function Map (): JSX.Element {
+interface Props {
+  route: any
+}
+
+export default function Map ({ route }: Props): JSX.Element {
   const [userLocation, setUserLocation] = useState<AddressType | null>({
     ...defaultValues
   })
@@ -136,6 +140,16 @@ export default function Map (): JSX.Element {
   )
 
   useLayoutEffect(() => {
+    console.log(route)
+
+    let latitude: number
+    let longitude: number
+
+    if (route?.params !== undefined) {
+      latitude = route.params.latitude
+      longitude = route.params.longitude
+    }
+
     requestLocationPermission()
       .then(async (response) => {
         const address = await getAddress(
@@ -149,9 +163,15 @@ export default function Map (): JSX.Element {
         setUserLocation(address)
         setLocation(address)
 
-        mapRef.current?.animateCamera({
-          center: response.coords
-        })
+        if (latitude && longitude) {
+          mapRef.current?.animateCamera({
+            center: { latitude, longitude }
+          })
+        } else {
+          mapRef.current?.animateCamera({
+            center: response.coords
+          })
+        }
 
         setLoading(false)
       })
@@ -204,8 +224,9 @@ export default function Map (): JSX.Element {
     const coordinates = e.nativeEvent.coordinate
   }
 
-  function handlePetInfoModalOpen (): void {
-    navigation.navigate('PetInfo')
+  function handlePetInfoModalOpen (id: number): void {
+    console.log(id)
+    navigation.navigate('PetInfo', { id })
   }
 
   return (
@@ -245,7 +266,7 @@ export default function Map (): JSX.Element {
                 latitude: pet.location.latitude,
                 longitude: pet.location.longitude
               }}
-              onPress={handlePetInfoModalOpen}
+              onPress={() => { handlePetInfoModalOpen(pet.id) }}
             >
               {pet.type === 'CACHORRO'
                 ? (

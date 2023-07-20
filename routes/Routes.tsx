@@ -35,11 +35,9 @@ export default function Routes (): JSX.Element {
           <Stack.Screen
             name="Map"
             component={Map}
-            options={
-              {
-                // contentStyle: { backgroundColor: 'red' }
-              }
-            }
+            options={{
+              headerTitle: 'Mapa de pets'
+            }}
           />
           <Stack.Screen
             name="PetInfo"
