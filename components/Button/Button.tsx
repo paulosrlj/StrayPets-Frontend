@@ -15,6 +15,7 @@ interface Props {
   textColor?: string
   onPress?: any
   icon?: keyof typeof Ionicons.glyphMap
+  disabled?: boolean
 }
 
 export default function Button ({
@@ -23,16 +24,22 @@ export default function Button ({
   backgroundColor,
   textColor,
   onPress,
-  icon
+  icon,
+  disabled = false
 }: Props): JSX.Element {
+  if (disabled) {
+    backgroundColor = Colors.primaryDisabled
+  }
+
   return (
     <Pressable
+    disabled={disabled}
       style={({ pressed }) => (
         [
           styles.button,
           style,
           { backgroundColor: backgroundColor ?? Colors.primaryBlue },
-          pressed ? styles.buttonOpacity : null
+          (!disabled && pressed) ? styles.buttonOpacity : null
         ]
       )}
       onPress={onPress}

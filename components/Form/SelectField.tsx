@@ -6,19 +6,21 @@ const deviceWidth = Dimensions.get('window').width
 
 interface PickerItemType {
   label: string
-  value: string
+  value: string | boolean
 }
 
 interface Props {
   label: string
   pickerItems: PickerItemType[]
   handleInputChange: (value: string) => void
+  acceptEmptyValue?: boolean
 }
 
 export default function SelectField ({
   label,
   handleInputChange,
-  pickerItems
+  pickerItems,
+  acceptEmptyValue = false
 }: Props): JSX.Element {
   return (
     <View style={styles.filterField}>
@@ -26,6 +28,7 @@ export default function SelectField ({
       <PickerField
         pickerItems={pickerItems}
         onChange={handleInputChange}
+        acceptEmptyValue={acceptEmptyValue}
       />
     </View>
   )

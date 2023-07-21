@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { Pressable, StyleSheet } from 'react-native'
 import GenericModal from '../Modal/GenericModal'
 
@@ -20,8 +20,8 @@ export default function CameraModal ({
   takePicture,
   setCameraOpen
 }: Props): JSX.Element {
-  const [type, setType] = useState(CameraType.back)
-  const [flash, setFlash] = useState(FlashMode.off)
+  const [type] = useState(CameraType.back)
+  const [flash] = useState(FlashMode.off)
 
   return (
     <GenericModal>
@@ -32,14 +32,6 @@ export default function CameraModal ({
         ref={cameraRef}
         ratio="16:9"
       >
-        <Spinner
-          visible={isProcessingImage}
-          textContent={'Processando a foto...'}
-          textStyle={{ color: 'white' }}
-          animation="slide"
-          color="white"
-          size={50}
-        />
         <Pressable
           style={({ pressed }) => [
             styles.cameraClose,
@@ -69,6 +61,14 @@ export default function CameraModal ({
           />
         </Pressable>
       </Camera>
+      <Spinner
+          visible={isProcessingImage}
+          textContent={'Processando a foto...'}
+          textStyle={{ color: 'white' }}
+          animation="slide"
+          color="white"
+          size={50}
+        />
     </GenericModal>
   )
 }

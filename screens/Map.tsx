@@ -22,7 +22,8 @@ import {
   getCurrentPositionAsync,
   requestForegroundPermissionsAsync,
   watchPositionAsync,
-  type LocationObject
+  type LocationObject,
+  type LocationSubscription
 } from 'expo-location'
 import PermissionError from '../errors/PermissionError'
 import { type PetTypeResponse } from '../types/PetTypes'
@@ -42,6 +43,12 @@ const toastConfig = {
   delay: 0
 }
 
+const options = {
+  accuracy: LocationAccuracy.Highest,
+  timeInterval: 10000,
+  distanceInterval: 1
+}
+
 interface Props {
   route: any
 }
@@ -50,6 +57,8 @@ export default function Map ({ route }: Props): JSX.Element {
   const [userLocation, setUserLocation] = useState<AddressType | null>({
     ...defaultValues
   })
+
+  const watchSubscriptionRef = useRef<LocationSubscription | null | undefined>(null)
 
   const [location, setLocation] = useState<AddressType>({ ...defaultValues })
 
@@ -140,8 +149,6 @@ export default function Map ({ route }: Props): JSX.Element {
   )
 
   useLayoutEffect(() => {
-    console.log(route)
-
     let latitude: number
     let longitude: number
 
@@ -160,7 +167,6 @@ export default function Map ({ route }: Props): JSX.Element {
         const pets = await getPetsByArea(address.state, address.city)
         setPets(pets)
 
-        setUserLocation(address)
         setLocation(address)
 
         if (latitude && longitude) {
@@ -183,49 +189,52 @@ export default function Map ({ route }: Props): JSX.Element {
         Toast.show(error.message, toastConfig)
         setLoading(false)
       })
-  }, [getPetsByArea, getAddress, requestLocationPermission])
+  }, [getPetsByArea, getAddress, requestLocationPermission, route])
 
   useEffect(() => {
     console.log('WATCH_POSITION_ASYNC')
-    watchPositionAsync(
-      {
-        accuracy: LocationAccuracy.Highest,
-        timeInterval: 10000,
-        distanceInterval: 1
-      },
-      async (response: LocationObject) => {
-        const lat = response.coords.latitude
-        const lon = response.coords.longitude
 
-        const address = await getAddress(lat, lon)
+    const onLocationChange = async (response: LocationObject): Promise<void> => {
+      const lat = response.coords.latitude
+      const lon = response.coords.longitude
 
-        if (verifyIfAddressChanged(address)) {
-          const pets = await getPetsByArea(address.cep, address.sub_location)
-          setPets(pets)
-        }
+      const address = await getAddress(lat, lon)
 
-        setUserLocation(address)
+      if (verifyIfAddressChanged(address)) {
+        const pets = await getPetsByArea(address.cep, address.sub_location)
+        setPets(pets)
       }
-    ).catch((error) => {
-      console.log(error)
-    })
+
+      setUserLocation(address)
+    }
+
+    watchPositionAsync(options, onLocationChange)
+      .then(locationSubscribe => {
+        watchSubscriptionRef.current = locationSubscribe
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+
+    return () => {
+      if (watchSubscriptionRef.current) {
+        watchSubscriptionRef.current.remove()
+      }
+    }
   }, [
     getAddress,
     getPetsByArea,
     verifyIfAddressChanged,
     location.latitudeDelta,
-    location.longitudeDelta
-  ])
+    location.longitudeDelta])
 
   function handleMapPress (e: MapPressEvent): void {
-    console.log(e.nativeEvent)
-    console.log(e.nativeEvent.coordinate)
+    const coords = e.nativeEvent.coordinate
 
-    const coordinates = e.nativeEvent.coordinate
+    navigation.navigate('PetRegister', { coords })
   }
 
   function handlePetInfoModalOpen (id: number): void {
-    console.log(id)
     navigation.navigate('PetInfo', { id })
   }
 
@@ -239,6 +248,7 @@ export default function Map ({ route }: Props): JSX.Element {
           )
         : (
         <MapView
+
           ref={mapRef}
           onPress={(e) => {
             handleMapPress(e)

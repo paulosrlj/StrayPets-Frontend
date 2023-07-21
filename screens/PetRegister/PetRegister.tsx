@@ -1,20 +1,103 @@
-import { View, Text, Dimensions, StyleSheet } from 'react-native'
-import React, { useState } from 'react'
-import PhotoRegister from './PhotoRegister'
+import { type LocationObject } from 'expo-location'
+import React, { useEffect, useState } from 'react'
+import { Dimensions, StyleSheet, View } from 'react-native'
+import Toast from 'react-native-root-toast'
+import PermissionError from '../../errors/PermissionError'
+import useLocationPermission from '../../hooks/useLocationPermission'
+import { alertToast } from '../../utils/toastConfig'
 import PetDataRegister from './PetDataRegister'
+import PhotoRegister from './PhotoRegister'
 
 const deviceWidth = Dimensions.get('window').width
-const deviceHeight = Dimensions.get('window').height
+interface Props {
+  route: any
+}
 
-export default function PetRegister (): JSX.Element {
-  const [formPage, setFormPage] = useState(2)
+export interface PetImageType {
+  uri: string
+  format: string
+}
+
+export interface PetData {
+  name: string
+  type: string
+  breed: string
+  gender: string
+  comments: string
+  location: {
+    latitude: number
+    longitude: number
+  }
+  images?: PetImageType[]
+  missing: boolean
+}
+
+export const defaultPetData = {
+  name: '',
+  type: '',
+  breed: '',
+  gender: '',
+  comments: '',
+  location: {
+    latitude: 0,
+    longitude: 0
+  },
+  images: [],
+  missing: false
+}
+
+export default function PetRegister ({ route }: Props): JSX.Element {
+  const [formPage, setFormPage] = useState(1)
+
+  const requestLocationPermission = useLocationPermission()
+
+  const [petData, setPetData] = useState<PetData>({
+    ...defaultPetData
+  })
+
+  function nextPage (): void {
+    setFormPage((oldState) => oldState + 1)
+  }
+
+  function backPage (): void {
+    setFormPage((oldState) => oldState - 1)
+  }
+
+  useEffect(() => {
+    const getLocation = async (): Promise<LocationObject> => {
+      const currentPosition = await requestLocationPermission()
+      console.log('Localização atual:', currentPosition)
+
+      return currentPosition
+    }
+
+    getLocation()
+      .then(response => {
+        setPetData(oldData => ({ ...oldData, location: { latitude: response.coords.latitude, longitude: response.coords.longitude } }))
+      })
+      .catch(error => {
+        if (error instanceof PermissionError) {
+          Toast.show(error.message, alertToast)
+        }
+      })
+  }, [requestLocationPermission])
 
   return (
     <View style={styles.container}>
-
-      {formPage === 1 && (<PhotoRegister />)}
-      {formPage === 2 && (<PetDataRegister />)}
-
+      {formPage === 1 && (
+        <PhotoRegister
+          advancePage={nextPage}
+          petData={petData}
+          setPetData={setPetData}
+        />
+      )}
+      {formPage === 2 && (
+        <PetDataRegister
+          petData={petData}
+          setPetData={setPetData}
+          backPage={backPage}
+        />
+      )}
     </View>
   )
 }

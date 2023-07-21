@@ -6,7 +6,7 @@ const deviceWidth = Dimensions.get('window').width
 
 interface PickerItemType {
   label: string
-  value: string
+  value: string | boolean
 }
 
 interface Props {
@@ -34,12 +34,12 @@ export default function PickerField ({
       >
         {acceptEmptyValue
           ? (
-          <Picker.Item key="N/A" label="N/A" value="N/A" />
+          <Picker.Item key="N/D" label="N/D" value="N/D" />
             )
           : null}
         {pickerItems.map((item, index) => (
           <Picker.Item
-            key={item.value}
+            key={item.value.toString() + index.toString()}
             label={item.label}
             value={item.value}
             style={styles.filterItem}

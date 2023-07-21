@@ -51,8 +51,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     marginHorizontal: 10,
-    marginVertical: 10,
-    backgroundColor: 'green'
+    marginVertical: 10
   },
   pressed: {
     opacity: 0.75,

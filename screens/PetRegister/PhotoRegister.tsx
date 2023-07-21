@@ -11,15 +11,22 @@ import CameraModal from '../../components/Camera/CameraModal'
 import ImageThumbnail from './ImageThumbnail'
 import Button from '../../components/Button/Button'
 import { Colors } from '../../utils/Colors'
+import { type PetData } from './PetRegister'
 
 const deviceWidth = Dimensions.get('window').width
 const deviceHeight = Dimensions.get('window').height
 
 interface ImageType {
-  uri: string
+  petData: PetData
+  setPetData: React.Dispatch<React.SetStateAction<PetData>>
+  advancePage: () => void
 }
 
-export default function PhotoRegister (): JSX.Element {
+export default function PhotoRegister ({
+  petData,
+  setPetData,
+  advancePage
+}: ImageType): JSX.Element {
   const [hasCameraPermission, setHasCameraPermission] =
     useState<boolean>(false)
   const [image, setImage] = useState<string | null>(null)
@@ -29,7 +36,6 @@ export default function PhotoRegister (): JSX.Element {
 
   const [isGalleryVisible, setIsGalleryVisible] = useState(false)
   const [photoToOpen, setPhotoToOpen] = useState(0)
-  const [images, setImages] = useState<ImageType[]>([])
 
   const [isProcessingImage, setIsProcessingImage] = useState(false)
 
@@ -65,10 +71,13 @@ export default function PhotoRegister (): JSX.Element {
 
     try {
       const data = await cameraRef.current?.takePictureAsync()
-      console.log(data)
 
       setImage(data?.uri ?? null)
-      setImages((oldState) => [...oldState, { uri: data?.uri ?? '' }])
+
+      setPetData((oldState: PetData) => ({
+        ...oldState,
+        images: [...oldState.images, { uri: data?.uri, format: data?.uri.split('.').pop() }]
+      }))
     } catch (error) {
       console.error(error)
     }
@@ -78,10 +87,10 @@ export default function PhotoRegister (): JSX.Element {
   }
 
   function deleteImage (index: number): void {
-    setImages((oldImages: ImageType[]) => {
-      const newImages = [...oldImages]
-      newImages.splice(index, 1)
-      return newImages
+    setPetData(oldState => {
+      const oldImages = oldState.images
+      oldImages.splice(index, 1)
+      return { ...oldState, images: oldImages }
     })
   }
 
@@ -114,7 +123,7 @@ export default function PhotoRegister (): JSX.Element {
 
       <View style={styles.imageContainer}>
         <View style={styles.thumbnailBox}>
-          {images.map((image, index) => (
+          {petData.images.map((image, index) => (
             <ImageThumbnail
               key={index}
               image={image}
@@ -124,7 +133,7 @@ export default function PhotoRegister (): JSX.Element {
             />
           ))}
 
-          {images.length < 5
+          {petData.images.length < 5
             ? (
             <Pressable
               style={({ pressed }) => [pressed ? styles.pressed : null]}
@@ -143,7 +152,11 @@ export default function PhotoRegister (): JSX.Element {
       </View>
 
       <View>
-        <Button style={{ marginBottom: 50, marginHorizontal: 20 }}>
+        <Button
+          disabled={petData.images.length === 0}
+          style={{ marginBottom: 50, marginHorizontal: 20 }}
+          onPress={advancePage}
+        >
           Próximo
         </Button>
       </View>
@@ -158,7 +171,7 @@ export default function PhotoRegister (): JSX.Element {
       )}
 
       <ImageView
-        images={images}
+        images={petData.images}
         imageIndex={photoToOpen}
         visible={isGalleryVisible}
         onRequestClose={() => {
@@ -190,7 +203,6 @@ const styles = StyleSheet.create({
   thumbnailBox: {
     flexWrap: 'wrap',
     justifyContent: 'center',
-
     flexDirection: 'row'
   },
   image: {

@@ -1,51 +1,188 @@
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native'
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions
+} from 'react-native'
 import React, { useState } from 'react'
 import TextField from '../../components/Form/TextField'
 import SelectField from '../../components/Form/SelectField'
 import Button from '../../components/Button/Button'
 import { Colors } from '../../utils/Colors'
+import { type PetImageType, type PetData, defaultPetData } from './PetRegister'
+import Toast from 'react-native-root-toast'
+import { alertToast, infoToast } from '../../utils/toastConfig'
+import axiosInstance from '../../utils/api/axios'
+import { AxiosError } from 'axios'
+
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'
+import { useNavigation } from '@react-navigation/native'
 
 interface FormInfoType {
-  petName: string
-  petGender: string
-  petType: string
-  petBreed: string
-  cep: string
-  observations: string
+  name: string
+  gender: string
+  type: string
+  breed: string
+  comments: string
+  missing: boolean
 }
 
 enum FieldToUpdate {
-  petName,
-  petGender,
-  petType,
-  petBreed,
-  cep,
-  observations,
+  name,
+  gender,
+  type,
+  breed,
+  comments,
+  missing
+}
+
+interface PetDataToSend {
+  name?: string
+  type: string
+  breed?: string
+  gender?: string
+  comments?: string
+  location: {
+    latitude: number
+    longitude: number
+  }
+  missing: boolean
+}
+
+interface ImageType {
+  name: string
+  uri: string
+  type: string
 }
 
 const deviceWidth = Dimensions.get('window').width
 
-export default function PetDataRegister (): JSX.Element {
-  const [formInfo, setFormInfo] = useState<FormInfoType>({
-    petName: '',
-    petGender: '',
-    petType: '',
-    petBreed: '',
-    cep: '',
-    observations: ''
-  })
+interface Props {
+  backPage: () => void
+  petData: PetData
+  setPetData: React.Dispatch<React.SetStateAction<PetData>>
+}
+
+export default function PetDataRegister ({
+  backPage,
+  petData,
+  setPetData
+}: Props): JSX.Element {
+  const navigation = useNavigation<any>()
+
+  const [sendingReq, setSendingReq] = useState(false)
 
   function handleFormInputChange (
     value: string,
     fieldToUpdate: FieldToUpdate
   ): void {
-    const field = FieldToUpdate[fieldToUpdate]
+    const field = FieldToUpdate[fieldToUpdate] as keyof FormInfoType
 
-    setFormInfo((oldFormInfo) => {
+    setPetData((oldFormInfo) => {
       const oldState = { ...oldFormInfo }
       oldState[field] = value
       return oldState
     })
+  }
+
+  function validateFields (data: PetDataToSend): boolean {
+    const allowedTypes = ['CACHORRO', 'GATO']
+    const allowedGenders = ['MACHO', 'FEMEA']
+
+    if (!allowedTypes.includes(data.type)) {
+      Toast.show('Tipo de animal inválido!', alertToast)
+      return false
+    }
+    if (data.gender && !allowedGenders.includes(data.gender)) {
+      Toast.show('Gênero de animal inválido!', alertToast)
+      return false
+    }
+    if (data.name && data.name?.length > 30) {
+      Toast.show('Nome do animal muito grande!', alertToast)
+      return false
+    }
+
+    return true
+  }
+
+  async function resizeImages (images: PetImageType[]): Promise<ImageType[]> {
+    const resizedImages = await Promise.all(
+      images.map(async (image, index) => {
+        const manipResult = await manipulateAsync(
+          image.uri,
+          [{ resize: { width: 640, height: 1280 } }],
+          {
+            compress: 1,
+            format: SaveFormat.JPEG
+          }
+        )
+
+        return {
+          name: petData.name + index.toString(),
+          uri: manipResult.uri,
+          type: 'image/jpeg'
+        }
+      })
+    )
+
+    return resizedImages
+  }
+
+  async function handleFormSubmit (): Promise<void> {
+    try {
+      setSendingReq(true)
+
+      if (petData.images === undefined) {
+        Toast.show('As imagens estão inválidas, por favor volte e tire-as novamente.', alertToast)
+        return
+      }
+
+      const formData = new FormData()
+
+      const petDataCpy = { ...petData }
+      delete petDataCpy.images
+
+      const filteredEntries = Object.entries(petDataCpy).filter(
+        ([_, value]) => value !== null && value !== ''
+      )
+
+      const dataToSend = Object.fromEntries(
+        filteredEntries
+      ) as unknown as PetDataToSend
+
+      console.log(dataToSend)
+
+      if (!validateFields(dataToSend)) {
+        setSendingReq(false)
+        return
+      }
+
+      const resizedImages = await resizeImages(petData.images)
+
+      resizedImages.forEach((image) => {
+        formData.append('images', image as unknown as any)
+      })
+
+      formData.append('data', JSON.stringify(dataToSend))
+
+      Toast.show('Cadastrando, aguarde...', infoToast)
+
+      await axiosInstance.post('/api/pet', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      setPetData({ ...defaultPetData })
+      navigation.navigate('Map')
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Erro:', error.message)
+      }
+      Toast.show('Ocorreu um erro ao tentar cadastrar o pet', alertToast)
+    }
+    setSendingReq(false)
   }
 
   return (
@@ -54,80 +191,81 @@ export default function PetDataRegister (): JSX.Element {
         <Text style={styles.title}>Preencha as informações do animal</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollViewContainer} >
+      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <TextField
           label="Nome"
-          value={formInfo.petName}
+          value={petData.name}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petName)
+            handleFormInputChange(value, FieldToUpdate.name)
           }}
         />
 
         <SelectField
-          label="Sexo"
+          acceptEmptyValue
+          label="Sexo*"
           pickerItems={[
-            { label: 'Macho', value: 'male' },
-            { label: 'Fêmea', value: 'female' }
+            { label: 'Macho', value: 'MACHO' },
+            { label: 'Fêmea', value: 'FEMEA' }
           ]}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petGender)
+            handleFormInputChange(value, FieldToUpdate.gender)
           }}
         />
 
         <SelectField
-          label="Tipo"
+          acceptEmptyValue
+          label="Tipo*"
           pickerItems={[
-            { label: 'Cachorro', value: 'dog' },
-            { label: 'Gato', value: 'cat' }
+            { label: 'Cachorro', value: 'CACHORRO' },
+            { label: 'Gato', value: 'GATO' }
           ]}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petType)
-          }}
-        />
-
-        <SelectField
-          label="Raça"
-          pickerItems={[
-            { label: 'Poddle', value: 'poddle' },
-            { label: 'Golden Retriever', value: 'golden retriever' }
-          ]}
-          handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petBreed)
+            handleFormInputChange(value, FieldToUpdate.type)
           }}
         />
 
         <TextField
-          label="Cep"
-          value={formInfo.cep}
-          keyboardType="number-pad"
+          label="Raça"
+          value={petData.breed}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.cep)
+            handleFormInputChange(value, FieldToUpdate.breed)
           }}
-        >
-          <Text style={styles.filterLabel}>
-            Cajazeiras - PB, 58900-000, Brasil{' '}
-          </Text>
-          <View style={styles.locationBox}>
-            <Button
-              style={{ width: deviceWidth * 0.9 }}
-              textColor="white"
-              backgroundColor={Colors.primaryGreen}
-            >
-              Usar localização atual
-            </Button>
-          </View>
-        </TextField>
+        />
+
+        <SelectField
+          label="Desaparecido*"
+          pickerItems={[
+            { label: 'Não', value: false },
+            { label: 'Sim', value: true }
+          ]}
+          handleInputChange={(value: string) => {
+            handleFormInputChange(value, FieldToUpdate.missing)
+          }}
+        />
 
         <TextField
           label="Observações"
-          value={formInfo.observations}
+          value={petData.comments}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.observations)
+            handleFormInputChange(value, FieldToUpdate.comments)
           }}
           textArea
         />
         <View style={styles.buttonBox}>
-          <Button style={{ width: deviceWidth * 0.9 }} textColor="white">
+          <Button
+            style={{ width: deviceWidth * 0.9 }}
+            textColor="white"
+            backgroundColor={Colors.primaryRed}
+            onPress={backPage}
+          >
+            Voltar
+          </Button>
+          <Button
+            style={{ width: deviceWidth * 0.9 }}
+            textColor="white"
+            onPress={handleFormSubmit}
+            disabled={sendingReq}
+          >
             Cadastrar
           </Button>
         </View>
@@ -154,7 +292,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   filterLabel: {
-    // backgroundColor: 'green',
     width: deviceWidth,
     marginVertical: 10,
     fontSize: 16
