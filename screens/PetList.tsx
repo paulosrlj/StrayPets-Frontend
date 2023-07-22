@@ -1,18 +1,12 @@
+import { useNavigation } from '@react-navigation/native'
 import React, { useLayoutEffect, useState } from 'react'
 import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native'
-
-import { useNavigation } from '@react-navigation/native'
-import Toast from 'react-native-root-toast'
+import { Colors } from 'react-native/Libraries/NewAppScreen'
 import PetInfoModal from '../components/PetInfo/PetInfoModal'
-import useLocationPermission from '../hooks/useLocationPermission'
 import { type PetTypeResponse } from '../types/PetTypes'
-import { Colors } from '../utils/Colors'
-import axiosInstance from '../utils/api/axios'
-import { getAddress } from '../utils/api/petsApi'
-import { alertToast } from '../utils/toastConfig'
 
 interface PetBoxProps {
-  image: any
+  image: string
   onPress: any
 }
 
@@ -29,40 +23,26 @@ function PetBox ({ image, onPress }: PetBoxProps): JSX.Element {
   )
 }
 
-export default function MissingPets (): JSX.Element {
+interface Props {
+  route: any
+}
+
+export default function PetList ({ route }: Props): JSX.Element {
   const navigation = useNavigation<any>()
 
-  const requestLocation = useLocationPermission()
-
-  const [pets, setPets] = useState<PetTypeResponse[]>()
+  const [pets, setPets] = useState<PetTypeResponse[]>([])
 
   const [modalVisible, setModalVisible] = useState(false)
-
-  useLayoutEffect(() => {
-    requestLocation()
-      .then(async (response) => {
-        const coords = response.coords
-        const address = await getAddress(coords.latitude, coords.longitude)
-
-        const { data } = await axiosInstance.get(
-          `/api/pet/queryPet?missing=true&cep=${address.cep}`
-        )
-
-        setPets(data)
-        console.log(data)
-      })
-      .catch((error) => {
-        Toast.show(
-          'Ocorreu um erro ao buscar animais desaparecidos, tente novamente mais tarde.',
-          alertToast
-        )
-        console.error(error)
-      })
-  }, [requestLocation])
 
   function handleImagePress (id: number): void {
     navigation.navigate('PetInfo', { id })
   }
+
+  useLayoutEffect(() => {
+    if (route?.params !== undefined) {
+      setPets(route.params.pets)
+    }
+  }, [route])
 
   return (
     <View style={styles.container}>
@@ -72,9 +52,7 @@ export default function MissingPets (): JSX.Element {
           renderItem={({ item, index }) => (
             <PetBox
               image={item.photos[0].photo_uri}
-              onPress={() => {
-                handleImagePress(item.id)
-              }}
+              onPress={() => { handleImagePress(item.id) }}
             />
           )}
           contentContainerStyle={styles.petImages}

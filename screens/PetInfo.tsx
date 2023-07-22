@@ -93,28 +93,32 @@ export default function PetInfo ({ missingPet, route }: Props & PetInfoRoutePara
 
   const navigation = useNavigation<any>()
 
-  const { id } = route.params
-
-  console.log(id)
-
   useLayoutEffect(() => {
-    async function fetchPet (): Promise<PetType> {
+    let id
+
+    async function fetchPet (id: number): Promise<PetType> {
       const pet = await axiosInstance.get(`/api/pet/${id}`)
       const data = pet.data as PetType
       console.log(data.photos)
       return data
     }
 
-    fetchPet()
-      .then(response => {
-        setPet(response)
-        setLoading(false)
-      })
-      .catch(error => {
-        console.error(error)
-        setLoading(false)
-      })
-  }, [id])
+    if (route?.params?.id !== undefined) {
+      id = route.params.id as number
+
+      fetchPet(id)
+        .then(response => {
+          setPet(response)
+          setLoading(false)
+        })
+        .catch(error => {
+          console.error(error)
+          setLoading(false)
+        })
+    } else if (route?.params?.petData !== undefined) {
+      setPet(route.params.petData)
+    }
+  }, [route.params.id, route.params.petData])
 
   function handleImagePress (index: number): void {
     setImageToOpen(index)
@@ -177,7 +181,11 @@ export default function PetInfo ({ missingPet, route }: Props & PetInfoRoutePara
 
             <TextLabel textLabel="Adotado" innerText={pet.adoption_date ? 'Sim' : 'Não'} />
 
-            <TextLabel textLabel="Data de adoção" innerText={new Date(pet.adoption_date!).toLocaleDateString() ?? 'N/A'} />
+            {pet.adoption_date
+              ? (
+              <TextLabel textLabel="Data de adoção" innerText={new Date(pet.adoption_date).toLocaleDateString()} />
+                )
+              : null}
 
             <TextLabel textLabel="Desaparecido" innerText={pet.missing ? 'Sim' : 'Não'} />
 

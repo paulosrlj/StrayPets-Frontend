@@ -22,11 +22,13 @@ export const alertToast: ToastOptions = {
 }
 
 export const successToast: ToastOptions = {
+  ...commonConfig,
   backgroundColor: Colors.primaryGreen,
   textColor: 'white'
 }
 
 export const infoToast: ToastOptions = {
+  ...commonConfig,
   backgroundColor: Colors.primaryBlue,
   textColor: 'white'
 }

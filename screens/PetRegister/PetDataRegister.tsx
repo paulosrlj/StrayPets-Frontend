@@ -1,23 +1,23 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Dimensions
-} from 'react-native'
-import React, { useState } from 'react'
-import TextField from '../../components/Form/TextField'
-import SelectField from '../../components/Form/SelectField'
-import Button from '../../components/Button/Button'
-import { Colors } from '../../utils/Colors'
-import { type PetImageType, type PetData, defaultPetData } from './PetRegister'
-import Toast from 'react-native-root-toast'
-import { alertToast, infoToast } from '../../utils/toastConfig'
-import axiosInstance from '../../utils/api/axios'
 import { AxiosError } from 'axios'
+import React, { useState } from 'react'
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from 'react-native'
+import Toast from 'react-native-root-toast'
+import Button from '../../components/Button/Button'
+import SelectField from '../../components/Form/SelectField'
+import TextField from '../../components/Form/TextField'
+import axiosInstance from '../../utils/api/axios'
+import { Colors } from '../../utils/Colors'
+import { alertToast, infoToast } from '../../utils/toastConfig'
 
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'
 import { useNavigation } from '@react-navigation/native'
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'
+import { defaultPetData, type PetData, type PetImageType } from '../../types/PetTypes'
 
 interface FormInfoType {
   name: string
@@ -175,6 +175,7 @@ export default function PetDataRegister ({
       })
 
       setPetData({ ...defaultPetData })
+      backPage()
       navigation.navigate('Map')
     } catch (error) {
       if (error instanceof AxiosError) {

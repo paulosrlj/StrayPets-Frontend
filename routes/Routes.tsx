@@ -9,6 +9,7 @@ import PetInfo from '../screens/PetInfo'
 import FindAPetScreen from '../screens/FindAPetScreen'
 import PetRegister from '../screens/PetRegister/PetRegister'
 import MissingPets from '../screens/MissingPets'
+import PetList from '../screens/PetList'
 
 const Stack = createNativeStackNavigator()
 
@@ -66,6 +67,14 @@ export default function Routes (): JSX.Element {
             component={MissingPets}
             options={{
               headerTitle: 'Pets desaparecidos'
+            }}
+          />
+
+          <Stack.Screen
+            name="PetList"
+            component={PetList}
+            options={{
+              headerTitle: 'Pets encontrados'
             }}
           />
         </Stack.Navigator>

@@ -4,6 +4,7 @@ import { Dimensions, StyleSheet, View } from 'react-native'
 import Toast from 'react-native-root-toast'
 import PermissionError from '../../errors/PermissionError'
 import useLocationPermission from '../../hooks/useLocationPermission'
+import { type PetData, defaultPetData } from '../../types/PetTypes'
 import { alertToast } from '../../utils/toastConfig'
 import PetDataRegister from './PetDataRegister'
 import PhotoRegister from './PhotoRegister'
@@ -11,39 +12,6 @@ import PhotoRegister from './PhotoRegister'
 const deviceWidth = Dimensions.get('window').width
 interface Props {
   route: any
-}
-
-export interface PetImageType {
-  uri: string
-  format: string
-}
-
-export interface PetData {
-  name: string
-  type: string
-  breed: string
-  gender: string
-  comments: string
-  location: {
-    latitude: number
-    longitude: number
-  }
-  images?: PetImageType[]
-  missing: boolean
-}
-
-export const defaultPetData = {
-  name: '',
-  type: '',
-  breed: '',
-  gender: '',
-  comments: '',
-  location: {
-    latitude: 0,
-    longitude: 0
-  },
-  images: [],
-  missing: false
 }
 
 export default function PetRegister ({ route }: Props): JSX.Element {

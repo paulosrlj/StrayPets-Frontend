@@ -1,60 +1,158 @@
 import React, { useState } from 'react'
-import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native'
+import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import Button from '../components/Button/Button'
 import { Colors } from '../utils/Colors'
 
 import SelectField from '../components/Form/SelectField'
 import TextField from '../components/Form/TextField'
+import useLocationPermission from '../hooks/useLocationPermission'
+import { type LocationObject } from 'expo-location'
+import { getAddress } from '../utils/api/petsApi'
+import { type AddressType } from '../types/geolocationTypes'
+import axiosInstance from '../utils/api/axios'
+import { useNavigation } from '@react-navigation/native'
+import Toast from 'react-native-root-toast'
+import { alertToast, infoToast } from '../utils/toastConfig'
+import { type PetTypeResponse } from '../types/PetTypes'
 
 const deviceWidth = Dimensions.get('window').width
-const deviceHeight = Dimensions.get('window').height
 
 interface FormInfoType {
-  petName: string
-  petGender: string
-  petType: string
-  petBreed: string
+  name: string
+  gender: string
+  type: string
+  breed: string
   cep: string
-  observations: string
+  comments: string
 }
 
 enum FieldToUpdate {
-  petName,
-  petGender,
-  petType,
-  petBreed,
+  name,
+  gender,
+  type,
+  breed,
   cep,
-  observations,
+  comments,
 }
 
 export default function FindAPetScreen (): JSX.Element {
+  const navigator = useNavigation<any>()
+
+  const [location, setLocation] = useState<AddressType>()
+  const [formValid, setFormValid] = useState(true)
+
+  const requestLocation = useLocationPermission()
+
   const [formInfo, setFormInfo] = useState<FormInfoType>({
-    petName: '',
-    petGender: '',
-    petType: '',
-    petBreed: '',
+    name: '',
+    gender: '',
+    type: '',
+    breed: '',
     cep: '',
-    observations: ''
+    comments: ''
   })
+
+  function formatCep (cep: string): string {
+    return cep.replace(/(\d{5})(\d)/, '$1-$2')
+  }
 
   function handleFormInputChange (
     value: string,
     fieldToUpdate: FieldToUpdate
   ): void {
-    const field = FieldToUpdate[fieldToUpdate]
+    const field = FieldToUpdate[fieldToUpdate] as keyof FormInfoType
+
+    if (field === 'cep' && value.length >= 5) {
+      value = formatCep(value)
+    }
 
     setFormInfo((oldFormInfo) => {
       const oldState = { ...oldFormInfo }
       oldState[field] = value
       return oldState
     })
+
+    console.log(formInfo)
+  }
+
+  async function handleUserPermission (): Promise<void> {
+    const { coords }: LocationObject = await requestLocation()
+
+    const address = await getAddress(coords.latitude, coords.longitude)
+    setLocation(address)
+    setFormInfo((oldData) => ({ ...oldData, cep: address.cep }))
+  }
+
+  function validateFields (): boolean {
+    setFormValid(false)
+
+    // Check if at least one field is not empty
+    const isValid = Object.values(formInfo).some((value) => value)
+    if (!isValid) {
+      Toast.show('Preencha pelo menos 1 campo!', alertToast)
+      setFormValid(true)
+
+      return false
+    }
+
+    if (formInfo.cep.length > 0 && formInfo.cep.length < 9) {
+      Toast.show('Cep inválido!', alertToast)
+      setFormValid(true)
+      return false
+    }
+
+    setFormValid(true)
+    return true
+  }
+
+  async function fetchPets (): Promise<void> {
+    if (!validateFields()) return
+
+    let queryParams = ''
+
+    if (formInfo.name.length > 0) {
+      queryParams += `name=${formInfo.name}&`
+    }
+
+    if (formInfo.type.length > 0) {
+      queryParams += `type=${formInfo.type}&`
+    }
+
+    if (formInfo.breed.length > 0) {
+      queryParams += `breed=${formInfo.breed}&`
+    }
+
+    if (formInfo.gender.length > 0) {
+      queryParams += `gender=${formInfo.gender}&`
+    }
+
+    if (formInfo.cep.length > 0) {
+      queryParams += `cep=${formInfo.cep}&`
+    }
+
+    if (formInfo.comments.length > 0) {
+      queryParams += `comments=${formInfo.comments}`
+    }
+
+    if (queryParams.endsWith('&')) {
+      queryParams = queryParams.slice(0, -1)
+    }
+
+    setFormValid(false)
+    Toast.show('Buscando, aguarde...', infoToast)
+    console.log(queryParams)
+
+    try {
+      const pets = await axiosInstance.get(`/api/pet/queryPet?${queryParams}`)
+      const data = pets.data as PetTypeResponse
+
+      navigator.navigate('PetList', { pets: data })
+    } catch (error) {
+      Toast.show('Ocorreu um erro ao tentar buscar.', alertToast)
+    }
+
+    setFormValid(true)
   }
 
   return (
@@ -62,42 +160,41 @@ export default function FindAPetScreen (): JSX.Element {
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <TextField
           label="Nome"
-          value={formInfo.petName}
+          value={formInfo.name}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petName)
+            handleFormInputChange(value, FieldToUpdate.name)
           }}
         />
 
         <SelectField
+          acceptEmptyValue
           label="Sexo"
           pickerItems={[
-            { label: 'Macho', value: 'male' },
-            { label: 'Fêmea', value: 'female' }
+            { label: 'Macho', value: 'MACHO' },
+            { label: 'Fêmea', value: 'FEMEA' }
           ]}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petGender)
+            handleFormInputChange(value, FieldToUpdate.gender)
           }}
         />
 
         <SelectField
+          acceptEmptyValue
           label="Tipo"
           pickerItems={[
-            { label: 'Cachorro', value: 'dog' },
-            { label: 'Gato', value: 'cat' }
+            { label: 'Cachorro', value: 'CACHORRO' },
+            { label: 'Gato', value: 'GATO' }
           ]}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petType)
+            handleFormInputChange(value, FieldToUpdate.type)
           }}
         />
 
-        <SelectField
+        <TextField
           label="Raça"
-          pickerItems={[
-            { label: 'Poddle', value: 'poddle' },
-            { label: 'Golden Retriever', value: 'golden retriever' }
-          ]}
+          value={formInfo.breed}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.petBreed)
+            handleFormInputChange(value, FieldToUpdate.breed)
           }}
         />
 
@@ -108,15 +205,17 @@ export default function FindAPetScreen (): JSX.Element {
           handleInputChange={(value: string) => {
             handleFormInputChange(value, FieldToUpdate.cep)
           }}
+          maxLength={9}
         >
-          <Text style={styles.filterLabel}>
-            Cajazeiras - PB, 58900-000, Brasil{' '}
-          </Text>
+          {location && (
+            <Text style={styles.filterLabel}>{location.full_address}</Text>
+          )}
           <View style={styles.locationBox}>
             <Button
               style={{ width: deviceWidth * 0.9 }}
               textColor="white"
               backgroundColor={Colors.primaryGreen}
+              onPress={handleUserPermission}
             >
               Usar localização atual
             </Button>
@@ -125,15 +224,20 @@ export default function FindAPetScreen (): JSX.Element {
 
         <TextField
           label="Observações"
-          value={formInfo.observations}
+          value={formInfo.comments}
           handleInputChange={(value: string) => {
-            handleFormInputChange(value, FieldToUpdate.observations)
+            handleFormInputChange(value, FieldToUpdate.comments)
           }}
           textArea
         />
 
         <View style={styles.buttonBox}>
-          <Button style={{ width: deviceWidth * 0.9 }} textColor="white">
+          <Button
+            disabled={!formValid}
+            style={{ width: deviceWidth * 0.9 }}
+            textColor="white"
+            onPress={fetchPets}
+          >
             Buscar
           </Button>
         </View>

@@ -11,6 +11,7 @@ interface Props {
   keyboardType?: KeyboardTypeOptions | undefined
   handleInputChange: (value: string) => void
   children?: ReactNode
+  maxLength?: number
 }
 
 export default function TextField ({
@@ -18,6 +19,7 @@ export default function TextField ({
   value,
   editable = true,
   textArea = false,
+  maxLength = 50,
   keyboardType,
   handleInputChange,
   children
@@ -33,7 +35,7 @@ export default function TextField ({
         onChangeText={handleInputChange}
         keyboardType={keyboardType}
         multiline={textArea}
-        maxLength={textArea ? 256 : 50}
+        maxLength={textArea ? 256 : maxLength}
       />
       {children ?? null}
     </View>

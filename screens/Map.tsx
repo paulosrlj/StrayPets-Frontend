@@ -7,8 +7,6 @@ import React, {
 } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-import axios from '../utils/api/axios'
-
 import MapView, { Marker, type Region } from 'react-native-maps'
 import { type MapPressEvent } from 'react-native-maps/lib/MapView.types'
 
@@ -29,6 +27,7 @@ import PermissionError from '../errors/PermissionError'
 import { type PetTypeResponse } from '../types/PetTypes'
 import { defaultValues, type AddressType } from '../types/geolocationTypes'
 import { Colors } from '../utils/Colors'
+import { getAddress, getPetsByArea } from '../utils/api/petsApi'
 import { debounce } from '../utils/debounceFn'
 
 const initialLatitudeDelta = 0.003211034107542865
@@ -72,30 +71,6 @@ export default function Map ({ route }: Props): JSX.Element {
   const longitudeDelta = 0.0008324906229972839 */
 
   const mapRef = useRef<MapView>(null)
-
-  const getAddress = useCallback(
-    async (latitude: number, longitude: number): Promise<AddressType> => {
-      const response = await axios.get(
-        `/api/maps?latitude=${latitude}&longitude=${longitude}`
-      )
-      const data = response.data as AddressType
-
-      return data
-    },
-    []
-  )
-
-  const getPetsByArea = useCallback(
-    async (state: string, city: string): Promise<PetTypeResponse[]> => {
-      const response = await axios.get(
-        `/api/pet/queryPet?state=${state}&city=${city}`
-      )
-      const data = response.data as PetTypeResponse[]
-
-      return data
-    },
-    []
-  )
 
   const requestLocationPermission =
     useCallback(async (): Promise<LocationObject> => {
@@ -189,7 +164,7 @@ export default function Map ({ route }: Props): JSX.Element {
         Toast.show(error.message, toastConfig)
         setLoading(false)
       })
-  }, [getPetsByArea, getAddress, requestLocationPermission, route])
+  }, [requestLocationPermission, route])
 
   useEffect(() => {
     console.log('WATCH_POSITION_ASYNC')
@@ -222,8 +197,6 @@ export default function Map ({ route }: Props): JSX.Element {
       }
     }
   }, [
-    getAddress,
-    getPetsByArea,
     verifyIfAddressChanged,
     location.latitudeDelta,
     location.longitudeDelta])
