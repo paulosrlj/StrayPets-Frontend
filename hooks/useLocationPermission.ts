@@ -1,30 +1,21 @@
-import { useCallback } from 'react'
 import {
-  requestForegroundPermissionsAsync,
-  getCurrentPositionAsync,
-  type LocationObject
+  requestForegroundPermissionsAsync
 } from 'expo-location'
+import { useCallback } from 'react'
 import PermissionError from '../errors/PermissionError'
 
-// Defina aqui o tipo para a função de permissão de localização
-type RequestLocationPermissionFn = () => Promise<LocationObject>
+type RequestLocationPermissionFn = () => Promise<boolean>
 
 const useLocationPermission = (): RequestLocationPermissionFn => {
-  const requestLocationPermission = useCallback(async (): Promise<LocationObject> => {
-    const { granted } = await requestForegroundPermissionsAsync()
+  const requestLocationPermission =
+    useCallback(async (): Promise<boolean> => {
+      const { granted } = await requestForegroundPermissionsAsync()
 
-    if (granted) {
-      const currentPosition = await getCurrentPositionAsync()
-
-      if (currentPosition === null) {
-        throw new PermissionError('Ocorreu um erro ao obter a posição.')
+      if (granted) {
+        return true
       }
-
-      return currentPosition
-    }
-
-    throw new PermissionError('A permissão de localização não foi aceita.')
-  }, [])
+      throw new PermissionError('Localização não aceita!')
+    }, [])
 
   return requestLocationPermission
 }
