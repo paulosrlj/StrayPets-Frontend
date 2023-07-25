@@ -10,6 +10,9 @@ import { Colors } from '../utils/Colors'
 import axiosInstance from '../utils/api/axios'
 import { getAddress } from '../utils/api/petsApi'
 import { alertToast } from '../utils/toastConfig'
+import { getLocation } from '../utils/geolocation'
+import PermissionError from '../errors/PermissionError'
+import { GeolocationError } from '../errors/GetLocationError'
 
 interface PetBoxProps {
   image: any
@@ -32,16 +35,17 @@ function PetBox ({ image, onPress }: PetBoxProps): JSX.Element {
 export default function MissingPets (): JSX.Element {
   const navigation = useNavigation<any>()
 
-  const requestLocation = useLocationPermission()
+  const requestLocationPermission = useLocationPermission()
 
   const [pets, setPets] = useState<PetTypeResponse[]>()
 
   const [modalVisible, setModalVisible] = useState(false)
 
   useLayoutEffect(() => {
-    requestLocation()
+    requestLocationPermission()
       .then(async (response) => {
-        const coords = response.coords
+        const { coords } = await getLocation()
+
         const address = await getAddress(coords.latitude, coords.longitude)
 
         const { data } = await axiosInstance.get(
@@ -52,13 +56,15 @@ export default function MissingPets (): JSX.Element {
         console.log(data)
       })
       .catch((error) => {
-        Toast.show(
-          'Ocorreu um erro ao buscar animais desaparecidos, tente novamente mais tarde.',
-          alertToast
-        )
-        console.error(error)
+        if (error instanceof PermissionError) {
+          Toast.show('Localização não aceita!', alertToast)
+        } else if (error instanceof GeolocationError) {
+          Toast.show(error.message, alertToast)
+        } else {
+          Toast.show(error.message, alertToast)
+        }
       })
-  }, [requestLocation])
+  }, [requestLocationPermission])
 
   function handleImagePress (id: number): void {
     navigation.navigate('PetInfo', { id })
@@ -113,11 +119,12 @@ const styles = StyleSheet.create({
   petImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 5
+    borderRadius: 5,
+    marginHorizontal: 10
   },
   petImages: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    /*  justifyContent: 'center', */
     flexWrap: 'wrap'
   },
   pressed: {

@@ -1,36 +1,12 @@
-import React, { useCallback, useEffect } from 'react'
+import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
-import { getCurrentPositionAsync, requestForegroundPermissionsAsync } from 'expo-location'
-import Toast from 'react-native-root-toast'
-import PermissionError from '../errors/PermissionError'
 import { Colors } from '../utils/Colors'
-import { alertToast } from '../utils/toastConfig'
 
 export default function Home (): JSX.Element {
   const navigator = useNavigation<any>()
-
-  /* const requestLocationPermission =
-  useCallback(async (): Promise<void> => {
-    const { granted } = await requestForegroundPermissionsAsync()
-
-    if (granted) {
-      const currentPosition = await getCurrentPositionAsync()
-
-      if (currentPosition === null) {
-        throw new PermissionError('Ocorreu um erro ao obter a posição.')
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    requestLocationPermission()
-      .catch(error => {
-        Toast.show(error.message, alertToast)
-      })
-  }, [requestLocationPermission]) */
 
   function handleNavigation (screen: string): void {
     navigator.navigate(screen)
