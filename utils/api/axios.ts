@@ -1,9 +1,14 @@
 import axios from 'axios'
 
+import Constants from 'expo-constants'
+
+const apiUrl = Constants.expoConfig!.extra!.apiUrl as string
+const jwtToken = Constants.expoConfig!.extra!.jwtToken as string
+
 const axiosInstance = axios.create({
-  baseURL: 'http://192.168.2.104:8080',
+  baseURL: apiUrl,
   headers: {
-    Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJTdHJheVBldHNBcGkiLCJzdWIiOiJwYXVsb0BnbWFpbC5jb20iLCJleHAiOjE2ODk5ODA2NjF9.jVJpQPUg42OeUWwa0agg_LwDumorPlTmnwnOHl0SLgI'}`
+    Authorization: `Bearer ${jwtToken}`
   }
 })
 
