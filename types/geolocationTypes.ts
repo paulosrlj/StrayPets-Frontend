@@ -11,6 +11,11 @@ export interface AddressType {
   state: string
 }
 
+export interface SimpleLocation {
+  latitude: number
+  longitude: number
+}
+
 export const defaultValues = {
   latitude: 0,
   longitude: 0,

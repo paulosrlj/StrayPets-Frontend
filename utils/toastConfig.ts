@@ -32,3 +32,10 @@ export const infoToast: ToastOptions = {
   backgroundColor: Colors.primaryBlue,
   textColor: 'white'
 }
+
+export const apiToast: ToastOptions = {
+  ...commonConfig,
+  backgroundColor: Colors.primaryBlue,
+  textColor: 'white',
+  duration: Toast.durations.SHORT
+}
