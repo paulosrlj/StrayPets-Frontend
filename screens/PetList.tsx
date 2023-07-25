@@ -91,11 +91,12 @@ const styles = StyleSheet.create({
   petImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 5
+    borderRadius: 5,
+    marginHorizontal: 25
   },
   petImages: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    /* justifyContent: 'center', */
     flexWrap: 'wrap'
   },
   pressed: {

@@ -15,6 +15,8 @@ import { useNavigation } from '@react-navigation/native'
 import Toast from 'react-native-root-toast'
 import { alertToast, infoToast } from '../utils/toastConfig'
 import { type PetTypeResponse } from '../types/PetTypes'
+import PermissionError from '../errors/PermissionError'
+import { getLocation } from '../utils/geolocation'
 
 const deviceWidth = Dimensions.get('window').width
 
@@ -41,6 +43,7 @@ export default function FindAPetScreen (): JSX.Element {
 
   const [location, setLocation] = useState<AddressType>()
   const [formValid, setFormValid] = useState(true)
+  const [fetching, setFetching] = useState(false)
 
   const requestLocation = useLocationPermission()
 
@@ -77,11 +80,21 @@ export default function FindAPetScreen (): JSX.Element {
   }
 
   async function handleUserPermission (): Promise<void> {
-    const { coords }: LocationObject = await requestLocation()
+    setFetching(true)
+    const granted = await requestLocation()
+
+    if (!granted) {
+      setFetching(false)
+      Toast.show('Permissão não concedida!', alertToast)
+      return
+    }
+
+    const { coords } = await getLocation()
 
     const address = await getAddress(coords.latitude, coords.longitude)
     setLocation(address)
     setFormInfo((oldData) => ({ ...oldData, cep: address.cep }))
+    setFetching(false)
   }
 
   function validateFields (): boolean {
@@ -216,6 +229,7 @@ export default function FindAPetScreen (): JSX.Element {
               textColor="white"
               backgroundColor={Colors.primaryGreen}
               onPress={handleUserPermission}
+              disabled={fetching}
             >
               Usar localização atual
             </Button>
