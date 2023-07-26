@@ -1,26 +1,21 @@
+import { useNavigation } from '@react-navigation/native'
+import { AxiosError } from 'axios'
 import React, { useState } from 'react'
 import {
-  View,
+  StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image
+  View
 } from 'react-native'
-import Button from '../components/Button/Button'
-import axiosInstance from '../utils/api/axios'
-import { AxiosError } from 'axios'
 import Toast from 'react-native-root-toast'
-import { alertToast } from '../utils/toastConfig'
-import { type RootState } from '../store/store'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
+import Button from '../components/Button/Button'
 import { login } from '../store/slices/AuthSlice'
-import { useNavigation } from '@react-navigation/native'
 import { Colors } from '../utils/Colors'
+import axiosInstance from '../utils/api/axios'
+import { alertToast } from '../utils/toastConfig'
 
 import AppLogo from '../assets/login_screen.svg'
-
-import Svg, { SvgXml } from 'react-native-svg'
 
 interface AuthResponse {
   token: string
@@ -30,14 +25,26 @@ interface AuthBadResponse {
   detail: string
 }
 
+interface ValidationItem {
+  name: string
+  userMessage: string
+}
+
+interface ValidationErrorResponse {
+  status: number
+  detail: string
+  title: string
+  userMessage: string
+  objects: ValidationItem[]
+}
+
 const LoginScreen = (): JSX.Element => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   const navigation = useNavigation<any>()
 
-  /*   const token = useSelector((state: RootState) => state.auth.token)
-   */ const dispatch = useDispatch()
+  const dispatch = useDispatch()
 
   const handleLogin = async (): Promise<void> => {
     console.log('Email:', email)
@@ -57,16 +64,18 @@ const LoginScreen = (): JSX.Element => {
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error?.response) {
-          const { detail } = error.response.data as AuthBadResponse
-          Toast.show(detail, alertToast)
+          if (error?.response.data?.objects) {
+            const validationErrors = error.response.data.objects as ValidationItem[]
+            Toast.show(validationErrors[0].userMessage, alertToast)
+          } else {
+            const { detail } = error.response.data as AuthBadResponse
+            Toast.show(detail, alertToast)
+          }
         }
       } else {
         Toast.show('Ocorreu um erro ao tentar fazer login', alertToast)
       }
     }
-
-    /* const { token } = response.data as AuthResponse
-    console.log(token) */
   }
 
   function handleGoToSignUp (): void {
@@ -75,9 +84,8 @@ const LoginScreen = (): JSX.Element => {
 
   return (
     <View style={styles.container}>
-
-      <AppLogo width="250" height="250"/>
-     <Text style={styles.title}>Stray Pets</Text>
+      <AppLogo width="250" height="250" />
+      <Text style={styles.title}>Stray Pets</Text>
 
       <TextInput
         style={styles.input}
