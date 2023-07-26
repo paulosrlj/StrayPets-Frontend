@@ -10,10 +10,17 @@ import FindAPetScreen from '../screens/FindAPetScreen'
 import PetRegister from '../screens/PetRegister/PetRegister'
 import MissingPets from '../screens/MissingPets'
 import PetList from '../screens/PetList'
+import LoginScreen from '../screens/LoginScreen'
+import { useSelector } from 'react-redux'
+import { type RootState } from '../store/store'
 
 const Stack = createNativeStackNavigator()
 
 export default function Routes (): JSX.Element {
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  )
+
   return (
     <>
       <NavigationContainer>
@@ -25,14 +32,26 @@ export default function Routes (): JSX.Element {
             headerTitleAlign: 'center'
           }}
         >
-          <Stack.Screen
-            name="BottomTabs"
-            component={TabNavigator}
-            options={{
-              headerShown: false,
-              contentStyle: { backgroundColor: 'red' }
-            }}
-          />
+          {isAuthenticated
+            ? (
+            <Stack.Screen
+              name="BottomTabs"
+              component={TabNavigator}
+              options={{
+                headerShown: false,
+                contentStyle: { backgroundColor: 'red' }
+              }}
+            />
+              )
+            : (
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{
+                headerShown: false
+              }}
+            />
+              )}
           <Stack.Screen
             name="Map"
             component={Map}

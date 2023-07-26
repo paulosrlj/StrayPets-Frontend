@@ -11,8 +11,16 @@ import React from 'react'
 import { FontAwesome, AntDesign } from '@expo/vector-icons'
 
 import { Colors } from '../utils/Colors'
+import { useDispatch } from 'react-redux'
+import { logout } from '../store/slices/AuthSlice'
 
 export default function Settings (): JSX.Element {
+  const dispath = useDispatch()
+
+  function handleLogout (): void {
+    dispath(logout())
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -57,7 +65,10 @@ export default function Settings (): JSX.Element {
             </View>
           </Pressable>
 
-          <Pressable style={({ pressed }) => [pressed ? styles.pressed : null]}>
+          <Pressable
+            style={({ pressed }) => [pressed ? styles.pressed : null]}
+            onPress={handleLogout}
+          >
             <View style={[styles.settingBox, styles.deleteBox]}>
               <Text style={[styles.text, styles.deleteText]}>Deslogar</Text>
               <Text style={[styles.text, styles.textValue]}>
@@ -65,7 +76,6 @@ export default function Settings (): JSX.Element {
               </Text>
             </View>
           </Pressable>
-
         </View>
       </ScrollView>
     </View>

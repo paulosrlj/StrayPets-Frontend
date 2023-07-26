@@ -5,7 +5,7 @@ import { FontAwesome5, MaterialIcons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import { Colors } from '../utils/Colors'
 
-export default function Home (): JSX.Element {
+function Home (): JSX.Element {
   const navigator = useNavigation<any>()
 
   function handleNavigation (screen: string): void {
@@ -13,7 +13,7 @@ export default function Home (): JSX.Element {
   }
 
   return (
-    <View style={styles.container}>
+      <View style={styles.container}>
       <View style={styles.innerContainer}>
         <Pressable
           style={({ pressed }) => [styles.box, pressed && styles.pressedBox]}
@@ -56,6 +56,8 @@ export default function Home (): JSX.Element {
   )
 }
 
+export default Home
+
 const styles = StyleSheet.create({
   container: {
     /* flex: 1 */
@@ -63,7 +65,7 @@ const styles = StyleSheet.create({
     // backgroundColor: 'red'
   },
   innerContainer: {
-    // flex: 1,
+    // flex: 1,s
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center'
