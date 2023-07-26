@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -7,18 +6,20 @@ import {
   StyleSheet,
   Image
 } from 'react-native'
+import React, { useState } from 'react'
+
 import Button from '../components/Button/Button'
 import axiosInstance from '../utils/api/axios'
 import { AxiosError } from 'axios'
 import Toast from 'react-native-root-toast'
-import { alertToast } from '../utils/toastConfig'
+import { alertToast, successToast } from '../utils/toastConfig'
 import { type RootState } from '../store/store'
 import { useDispatch, useSelector } from 'react-redux'
 import { login } from '../store/slices/AuthSlice'
 import { useNavigation } from '@react-navigation/native'
 import { Colors } from '../utils/Colors'
 
-import AppLogo from '../assets/login_screen.svg'
+import SignUpSvg from '../assets/signup.svg'
 
 import Svg, { SvgXml } from 'react-native-svg'
 
@@ -30,30 +31,57 @@ interface AuthBadResponse {
   detail: string
 }
 
-const LoginScreen = (): JSX.Element => {
+const SignUpScreen = (): JSX.Element => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  const [isValidating, setisValidating] = useState(false)
+
   const navigation = useNavigation<any>()
 
-  /*   const token = useSelector((state: RootState) => state.auth.token)
-   */ const dispatch = useDispatch()
+  const dispatch = useDispatch()
 
-  const handleLogin = async (): Promise<void> => {
+  function validateEmail (email: string): boolean {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+
+    return emailPattern.test(email)
+  }
+
+  function validateFields (): boolean {
+    if (!validateEmail(email)) {
+      Toast.show('E-mail inválido!', alertToast)
+      return false
+    }
+
+    if (password.length < 6) {
+      Toast.show('A senha não pode ter menos que 6 caracteres!', alertToast)
+      return false
+    }
+
+    return true
+  }
+
+  const handleSignUp = async (): Promise<void> => {
+    setisValidating(true)
+    if (!validateFields()) {
+      setisValidating(false)
+      return
+    }
+
+    // Aqui você pode implementar a lógica para autenticar o usuário
+    // Por exemplo, enviar as credenciais para o servidor e verificar se são válidas
     console.log('Email:', email)
     console.log('Senha:', password)
 
     try {
-      const response = await axiosInstance.post(
-        '/api/auth/login',
-        { email, password },
+      await axiosInstance.post(
+        '/api/auth/register',
+        { email, password, role: 'USER' },
         { headers: { 'Content-Type': 'application/json' } }
       )
 
-      const { token } = response.data as AuthResponse
-
-      dispatch(login(token))
-      navigation.navigate('BottomTabs')
+      Toast.show('Usuário criado!', successToast)
+      navigation.navigate('Login')
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error?.response) {
@@ -67,40 +95,49 @@ const LoginScreen = (): JSX.Element => {
 
     /* const { token } = response.data as AuthResponse
     console.log(token) */
+
+    setisValidating(false)
   }
 
-  function handleGoToSignUp (): void {
-    navigation.navigate('SignUp')
+  function goBack (): void {
+    navigation.goBack()
   }
 
   return (
     <View style={styles.container}>
-
-      <AppLogo width="250" height="250"/>
-     <Text style={styles.title}>Stray Pets</Text>
+      <SignUpSvg width="250" height="250" />
+      <Text style={styles.title}>
+        Criar uma nova conta
+      </Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Digite um E-mail"
         value={email}
         onChangeText={setEmail}
       />
       <TextInput
         style={styles.input}
-        placeholder="Senha"
+        placeholder="Digite uma senha"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
-      <Button style={{ width: '100%' }} onPress={handleLogin}>
-        Entrar
-      </Button>
+
       <Button
         backgroundColor={Colors.primaryGreen}
         style={{ width: '100%' }}
-        onPress={handleGoToSignUp}
+        onPress={handleSignUp}
+        disabled={isValidating}
       >
-        Registrar
+        Se registrar
+      </Button>
+      <Button
+        backgroundColor={Colors.primaryRed}
+        style={{ width: '100%' }}
+        onPress={goBack}
+      >
+        Voltar
       </Button>
     </View>
   )
@@ -115,11 +152,10 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '400',
     marginBottom: 20,
-    padding: 10,
-    color: Colors.primaryPurple
+    padding: 10
   },
   input: {
     width: '100%',
@@ -149,4 +185,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default LoginScreen
+export default SignUpScreen

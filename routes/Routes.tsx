@@ -13,6 +13,7 @@ import PetList from '../screens/PetList'
 import LoginScreen from '../screens/LoginScreen'
 import { useSelector } from 'react-redux'
 import { type RootState } from '../store/store'
+import SignUpScreen from '../screens/SignUpScreen'
 
 const Stack = createNativeStackNavigator()
 
@@ -40,6 +41,7 @@ export default function Routes (): JSX.Element {
               options={{
                 headerShown: false,
                 contentStyle: { backgroundColor: 'red' }
+
               }}
             />
               )
@@ -52,6 +54,16 @@ export default function Routes (): JSX.Element {
               }}
             />
               )}
+
+          <Stack.Screen
+            name="SignUp"
+            component={SignUpScreen}
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right'
+
+            }}
+          />
           <Stack.Screen
             name="Map"
             component={Map}

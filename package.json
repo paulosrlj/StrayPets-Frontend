@@ -38,7 +38,8 @@
     "react-native-screens": "~3.20.0",
     "react-native-search-header": "^0.3.5",
     "react-redux": "^8.1.1",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "react-native-svg": "13.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -53,6 +54,7 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "react-native-dotenv": "^3.4.9",
+    "react-native-svg-transformer": "^1.1.0",
     "typescript": "^5.1.6"
   },
   "private": true
