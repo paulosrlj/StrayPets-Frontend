@@ -1,27 +1,21 @@
+import React, { useState } from 'react'
 import {
-  View,
+  StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image
+  View
 } from 'react-native'
-import React, { useState } from 'react'
 
-import Button from '../components/Button/Button'
-import axiosInstance from '../utils/api/axios'
+import { useNavigation } from '@react-navigation/native'
 import { AxiosError } from 'axios'
 import Toast from 'react-native-root-toast'
-import { alertToast, successToast } from '../utils/toastConfig'
-import { type RootState } from '../store/store'
-import { useDispatch, useSelector } from 'react-redux'
-import { login } from '../store/slices/AuthSlice'
-import { useNavigation } from '@react-navigation/native'
+import { useDispatch } from 'react-redux'
+import Button from '../components/Button/Button'
 import { Colors } from '../utils/Colors'
+import axiosInstance from '../utils/api/axios'
+import { alertToast, successToast } from '../utils/toastConfig'
 
 import SignUpSvg from '../assets/signup.svg'
-
-import Svg, { SvgXml } from 'react-native-svg'
 
 interface AuthResponse {
   token: string

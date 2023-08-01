@@ -88,6 +88,7 @@ export default function MissingPets (): JSX.Element {
 
         {modalVisible && (
           <PetInfoModal
+          missing
             onPressCloseButton={() => {
               setModalVisible(false)
             }}

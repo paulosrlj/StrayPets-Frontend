@@ -46,7 +46,25 @@ const LoginScreen = (): JSX.Element => {
 
   const dispatch = useDispatch()
 
+  function validateFields (): boolean {
+    if (email.length === 0) {
+      Toast.show('E-mail inválido!', alertToast)
+      return false
+    }
+
+    if (password.length < 6) {
+      Toast.show('A senha não pode ter menos que 6 caracteres!', alertToast)
+      return false
+    }
+
+    return true
+  }
+
   const handleLogin = async (): Promise<void> => {
+    if (!validateFields()) {
+      return
+    }
+
     console.log('Email:', email)
     console.log('Senha:', password)
 

@@ -7,7 +7,8 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  View
+  View,
+  Alert
 } from 'react-native'
 import ImageView from 'react-native-image-viewing'
 
@@ -20,12 +21,12 @@ import axiosInstance from '../utils/api/axios'
 const deviceWidth = Dimensions.get('window').width
 
 export interface PetInfoRouteParams {
-  id: number
+  id?: number
 }
 
 interface Props {
   missingPet?: boolean
-  route: any
+  route?: any
 }
 
 interface PetType {
@@ -125,6 +126,21 @@ export default function PetInfo ({ missingPet, route }: Props & PetInfoRoutePara
     setIsVisible(true)
   }
 
+  function handleMissingPet (): void {
+    Alert.alert('Confirmação', 'Você adotou esse pet?', [
+      {
+        text: 'Não',
+        onPress: () => { console.log('Cancel Pressed') },
+        style: 'cancel'
+      },
+      { text: 'Sim', onPress: () => { console.log('OK Pressed') } }
+    ])
+  }
+
+  function handleAdoptPet (): void {
+
+  }
+
   const photoUris = pet.photos.map((photo: PhotoType) => ({ uri: photo.photo_uri }))
 
   function handlePressMap (): void {
@@ -209,6 +225,7 @@ export default function PetInfo ({ missingPet, route }: Props & PetInfoRoutePara
             style={{ marginBottom: 10, width: deviceWidth * 0.8 }}
             textColor="white"
             backgroundColor={Colors.primaryGreen}
+            onPress={missingPet ? handleMissingPet : handleAdoptPet}
           >
             {missingPet ? 'Eu encontrei esse pet!' : 'Eu adotei esse pet!'}
           </Button>
@@ -226,7 +243,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     backgroundColor: '#e8e8e8'
   },
-
   petContainer: {
     flex: 1,
     alignItems: 'center',
@@ -256,7 +272,7 @@ const styles = StyleSheet.create({
     fontWeight: 'normal'
   },
   buttonContainer: {
-
+    marginVertical: 10
   },
   buttonSpacing: {
     marginRight: 10

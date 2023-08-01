@@ -5,17 +5,19 @@ import CloseButton from './CloseButton'
 
 interface Props {
   onPressCloseButton: () => void
+  missing?: boolean
 }
 
 export default function PetInfoModal ({
-  onPressCloseButton
+  onPressCloseButton,
+  missing = false
 }: Props): JSX.Element {
   return (
     <>
       <View style={styles.overlay} />
       <View style={styles.container}>
         <CloseButton onPress={onPressCloseButton} />
-        <PetInfo missingPet />
+        <PetInfo missingPet={missing} />
       </View>
     </>
   )
