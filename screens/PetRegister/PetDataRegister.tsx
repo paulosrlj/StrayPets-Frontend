@@ -11,13 +11,13 @@ import Toast from 'react-native-root-toast'
 import Button from '../../components/Button/Button'
 import SelectField from '../../components/Form/SelectField'
 import TextField from '../../components/Form/TextField'
-import axiosInstance from '../../utils/api/axios'
 import { Colors } from '../../utils/Colors'
 import { alertToast, infoToast } from '../../utils/toastConfig'
 
 import { useNavigation } from '@react-navigation/native'
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator'
 import { defaultPetData, type PetData, type PetImageType } from '../../types/PetTypes'
+import useAxiosInstance from '../../hooks/useAxiosInstance'
 
 interface FormInfoType {
   name: string
@@ -69,6 +69,8 @@ export default function PetDataRegister ({
   petData,
   setPetData
 }: Props): JSX.Element {
+  const axiosInstance = useAxiosInstance()
+
   const navigation = useNavigation<any>()
 
   const [sendingReq, setSendingReq] = useState(false)

@@ -1,59 +1,100 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  ScrollView
-} from 'react-native'
 import React from 'react'
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from 'react-native'
 
-import { FontAwesome, AntDesign } from '@expo/vector-icons'
+import { AntDesign, FontAwesome } from '@expo/vector-icons'
 
-import { Colors } from '../utils/Colors'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../store/slices/AuthSlice'
+import { Colors } from '../utils/Colors'
+
+import { AxiosError } from 'axios'
+import Toast from 'react-native-root-toast'
+import { type RootState } from '../store/store'
+import { type AuthBadResponse, type ValidationErrorResponse } from '../types/ApiResponseTypes'
+import { alertToast } from '../utils/toastConfig'
+import useAxiosInstance from '../hooks/useAxiosInstance'
 
 export default function Settings (): JSX.Element {
   const dispath = useDispatch()
+  const authInfo = useSelector((state: RootState) => state.auth)
+  const axiosInstance = useAxiosInstance()
 
   function handleLogout (): void {
     dispath(logout())
+  }
+
+  function confirmAccountDeactivation (): void {
+    Alert.alert('Desativação de conta', 'Você realmente deseja desativar a sua conta?', [
+      {
+        text: 'Cancelar',
+        onPress: () => { console.log('Cancel Pressed') },
+        style: 'cancel'
+      },
+      { text: 'Sim', onPress: async () => { await handleDeactivateAccount() } }
+    ])
+  }
+
+  async function handleDeactivateAccount (): Promise<void> {
+    try {
+      await axiosInstance.put(`/api/auth/deactivate-account/${authInfo.userId}`)
+      handleLogout()
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error?.response) {
+          if (error?.response.data) {
+            const errorRes = error.response.data as ValidationErrorResponse
+            Toast.show(errorRes.userMessage, alertToast)
+          } else {
+            const { detail } = error.response.data as AuthBadResponse
+            Toast.show(detail, alertToast)
+          }
+        }
+      } else {
+        Toast.show('Ocorreu um erro ao tentar fazer login', alertToast)
+      }
+    }
   }
 
   return (
     <View style={styles.container}>
       <ScrollView>
         <View style={styles.settingsContainer}>
-          <View style={styles.settingBox}>
+          {/* <View style={styles.settingBox}>
             <Text style={styles.text}>Usuário</Text>
             <Text style={[styles.text, styles.textValue]}>paulosrlj</Text>
-          </View>
-          <View style={styles.settingBox}>
+          </View> */}
+          {/* <View style={styles.settingBox}>
             <Text style={styles.text}>Senha</Text>
             <TextInput
               style={[styles.text, styles.textValue]}
               value="senha"
               secureTextEntry
             />
-          </View>
+          </View> */}
 
           <View style={styles.settingBox}>
             <Text style={styles.text}>Email</Text>
             <Text style={[styles.text, styles.textValue]}>
-              paulosrlj1214@gmail.com
+              {authInfo.userEmail}
             </Text>
           </View>
 
           <View style={styles.settingBox}>
-            <Text style={styles.text}>Telefone</Text>
-            <Text style={[styles.text, styles.textValue]}>(83) 99577-4612</Text>
+            <Text style={styles.text}>Reportar Bug</Text>
+            <Text style={[styles.text, styles.textValue]}><FontAwesome name="bug" size={24} color="black" /></Text>
           </View>
 
-          <Pressable style={({ pressed }) => [pressed ? styles.pressed : null]}>
+          <Pressable style={({ pressed }) => [pressed ? styles.pressed : null]} onPress={confirmAccountDeactivation}>
             <View style={[styles.settingBox, styles.deleteBox]}>
               <Text style={[styles.text, styles.deleteText]}>
-                Deletar conta
+                Desativar conta
               </Text>
               <Text style={[styles.text, styles.textValue]}>
                 <FontAwesome

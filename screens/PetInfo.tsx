@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useState } from 'react'
 import {
+  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -7,16 +8,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  View,
-  Alert
+  View
 } from 'react-native'
 import ImageView from 'react-native-image-viewing'
 
 import { useNavigation } from '@react-navigation/native'
 import Button from '../components/Button/Button'
 import TextLabel from '../components/Text/TextLabel'
+import useAxiosInstance from '../hooks/useAxiosInstance'
 import { Colors } from '../utils/Colors'
-import axiosInstance from '../utils/api/axios'
 
 const deviceWidth = Dimensions.get('window').width
 
@@ -86,6 +86,8 @@ interface PhotoType {
 }
 
 export default function PetInfo ({ missingPet, route }: Props & PetInfoRouteParams): JSX.Element {
+  const axiosInstance = useAxiosInstance()
+
   const [loading, setLoading] = useState(true)
 
   const [visible, setIsVisible] = useState(false)

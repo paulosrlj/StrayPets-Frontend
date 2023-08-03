@@ -17,10 +17,6 @@ import { alertToast, successToast } from '../utils/toastConfig'
 
 import SignUpSvg from '../assets/signup.svg'
 
-interface AuthResponse {
-  token: string
-}
-
 interface AuthBadResponse {
   detail: string
 }
@@ -32,8 +28,6 @@ const SignUpScreen = (): JSX.Element => {
   const [isValidating, setisValidating] = useState(false)
 
   const navigation = useNavigation<any>()
-
-  const dispatch = useDispatch()
 
   function validateEmail (email: string): boolean {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/

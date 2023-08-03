@@ -11,10 +11,9 @@ import CameraModal from '../../components/Camera/CameraModal'
 import ImageThumbnail from './ImageThumbnail'
 import Button from '../../components/Button/Button'
 import { Colors } from '../../utils/Colors'
-import { type PetData } from './PetRegister'
+import { type PetData } from '../../types/PetTypes'
 
 const deviceWidth = Dimensions.get('window').width
-const deviceHeight = Dimensions.get('window').height
 
 interface ImageType {
   petData: PetData

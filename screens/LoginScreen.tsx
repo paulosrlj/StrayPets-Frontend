@@ -1,21 +1,23 @@
 import { useNavigation } from '@react-navigation/native'
 import { AxiosError } from 'axios'
-import React, { useState } from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 import {
   StyleSheet,
   Text,
   TextInput,
   View
 } from 'react-native'
+import { MMKV } from 'react-native-mmkv'
 import Toast from 'react-native-root-toast'
 import { useDispatch } from 'react-redux'
 import Button from '../components/Button/Button'
 import { login } from '../store/slices/AuthSlice'
 import { Colors } from '../utils/Colors'
-import axiosInstance from '../utils/api/axios'
 import { alertToast } from '../utils/toastConfig'
 
 import AppLogo from '../assets/login_screen.svg'
+import useAxiosInstance from '../hooks/useAxiosInstance'
+import { type JwtStorageDecoded } from '../types/ApiResponseTypes'
 
 interface AuthResponse {
   token: string
@@ -30,21 +32,26 @@ interface ValidationItem {
   userMessage: string
 }
 
-interface ValidationErrorResponse {
-  status: number
-  detail: string
-  title: string
-  userMessage: string
-  objects: ValidationItem[]
-}
-
 const LoginScreen = (): JSX.Element => {
+  const dispatch = useDispatch()
+  const axiosInstance = useAxiosInstance()
+
+  useLayoutEffect(() => {
+    const storage = new MMKV({ id: 'stray-pets' })
+
+    const data = storage.getString('user')
+
+    if (data) {
+      const user: JwtStorageDecoded = JSON.parse(data)
+
+      dispatch(login(user.token))
+    }
+  }, [dispatch])
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   const navigation = useNavigation<any>()
-
-  const dispatch = useDispatch()
 
   function validateFields (): boolean {
     if (email.length === 0) {
@@ -65,9 +72,6 @@ const LoginScreen = (): JSX.Element => {
       return
     }
 
-    console.log('Email:', email)
-    console.log('Senha:', password)
-
     try {
       const response = await axiosInstance.post(
         '/api/auth/login',
@@ -76,6 +80,7 @@ const LoginScreen = (): JSX.Element => {
       )
 
       const { token } = response.data as AuthResponse
+      console.log(token)
 
       dispatch(login(token))
       navigation.navigate('BottomTabs')

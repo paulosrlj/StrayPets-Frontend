@@ -11,10 +11,10 @@ import TextField from '../components/Form/TextField'
 import useLocationPermission from '../hooks/useLocationPermission'
 import { type PetTypeResponse } from '../types/PetTypes'
 import { type AddressType } from '../types/geolocationTypes'
-import axiosInstance from '../utils/api/axios'
 import { getAddress } from '../utils/api/petsApi'
 import { getLocation } from '../utils/geolocation'
 import { alertToast, infoToast } from '../utils/toastConfig'
+import useAxiosInstance from '../hooks/useAxiosInstance'
 
 const deviceWidth = Dimensions.get('window').width
 
@@ -37,6 +37,8 @@ enum FieldToUpdate {
 }
 
 export default function FindAPetScreen (): JSX.Element {
+  const axiosInstance = useAxiosInstance()
+
   const navigator = useNavigation<any>()
 
   const [location, setLocation] = useState<AddressType>()

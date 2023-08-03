@@ -4,15 +4,15 @@ import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import Toast from 'react-native-root-toast'
 import PetInfoModal from '../components/PetInfo/PetInfoModal'
+import { GeolocationError } from '../errors/GetLocationError'
+import PermissionError from '../errors/PermissionError'
+import useAxiosInstance from '../hooks/useAxiosInstance'
 import useLocationPermission from '../hooks/useLocationPermission'
 import { type PetTypeResponse } from '../types/PetTypes'
 import { Colors } from '../utils/Colors'
-import axiosInstance from '../utils/api/axios'
 import { getAddress } from '../utils/api/petsApi'
-import { alertToast } from '../utils/toastConfig'
 import { getLocation } from '../utils/geolocation'
-import PermissionError from '../errors/PermissionError'
-import { GeolocationError } from '../errors/GetLocationError'
+import { alertToast } from '../utils/toastConfig'
 
 interface PetBoxProps {
   image: any
@@ -33,6 +33,8 @@ function PetBox ({ image, onPress }: PetBoxProps): JSX.Element {
 }
 
 export default function MissingPets (): JSX.Element {
+  const axiosInstance = useAxiosInstance()
+
   const navigation = useNavigation<any>()
 
   const requestLocationPermission = useLocationPermission()
@@ -64,7 +66,7 @@ export default function MissingPets (): JSX.Element {
           Toast.show(error.message, alertToast)
         }
       })
-  }, [requestLocationPermission])
+  }, [requestLocationPermission, axiosInstance])
 
   function handleImagePress (id: number): void {
     navigation.navigate('PetInfo', { id })
